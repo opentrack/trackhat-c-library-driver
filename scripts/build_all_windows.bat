@@ -49,7 +49,6 @@ if %DEBUG%==1 (
 
 rem Create Visual Studio projects
 
-if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 cd "%BUILD_DIR%"
 cmake -G %VISUAL_STUDIO_USED% ..^
 	-UINSTALL_BIN_DIR^
@@ -66,6 +65,13 @@ if %errorlevel% neq 0 goto :showerror
 rem rem Compile Visual Studio projects
 
 msbuild ALL_BUILD.vcxproj /property:Configuration=%CONFIGURATION% /p:Platform="x64"
+if %errorlevel% neq 0 goto :showerror
+
+rem Create installer
+
+if %DEBUG%==0 (
+    cpack .
+)
 if %errorlevel% neq 0 goto :showerror
 
 endlocal
