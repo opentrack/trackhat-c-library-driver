@@ -14,7 +14,7 @@ add_library(
 
 # Headers installation
 install(
-  FILES track-hat-driver.h
+  FILES ${TRACK_HAT_DRIVER_INCLUDES_INSTALL}
   DESTINATION include)
 
 # Library installation

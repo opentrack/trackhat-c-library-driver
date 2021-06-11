@@ -4,11 +4,14 @@
 //------------------------------------------------------
 
 #include "track-hat-driver.h"
+
+#include <iostream>
 #include <Windows.h>
 
 int main()
 {
-	int ret = track_hat_initialize();
-	system("pause");
-	return ret;
+  trackHat_Device_t device;
+  trackHat_Initialize(&device);
+  system("pause");
+  return 0;
 }

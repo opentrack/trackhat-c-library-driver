@@ -4,11 +4,9 @@
 //------------------------------------------------------
 
 #include "track-hat-driver.h"
-#include <iostream>
 
 
-EXPORT_C int track_hat_initialize(void)
+void trackHat_Initialize(trackHat_Device_t* device)
 {
-    std::cout << "Track Hat library test initializing\n";
-    return 0;
+
 }

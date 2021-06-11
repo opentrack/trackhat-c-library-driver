@@ -49,6 +49,7 @@ if %DEBUG%==1 (
 
 rem Create Visual Studio projects
 
+if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 cd "%BUILD_DIR%"
 cmake -G %VISUAL_STUDIO_USED% ..^
 	-UINSTALL_BIN_DIR^
