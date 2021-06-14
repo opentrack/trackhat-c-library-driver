@@ -1,5 +1,5 @@
 // File:   track-hat-driver.h
-// Brief:  TrackHat driver library
+// Brief:  TrackHat driver library API
 // Author: Piotr Nowicki <piotr.nowicki@wizzdev.pl>
 //------------------------------------------------------
 
@@ -15,11 +15,12 @@
 
 /* Export symbol as in C language. */
 #ifdef __cplusplus
-  extern "C" {
+  extern "C"
+  {
 #endif
 
 
-#include "track-hat-types.h"
+#include "track_hat_types.h"
 
 
 /**
@@ -32,13 +33,13 @@ void trackHat_Initialize(trackHat_Device_t* device);
  * Deinitialize structure 'track_hat_device_t' and disconnect device (if connected).
  */
 EXPORT_API
-THErrorCode trackHat_Deinitialize(trackHat_Device_t* device);
+TH_ErrorCode trackHat_Deinitialize(trackHat_Device_t* device);
 
 /**
  * Detect TrackHat device connected to USB port.
  */
 EXPORT_API
-THErrorCode trackHat_DetectDevice(trackHat_Device_t* device);
+TH_ErrorCode trackHat_DetectDevice(trackHat_Device_t* device);
 
 /**
  * Connect with TrackHat device.
@@ -46,25 +47,25 @@ THErrorCode trackHat_DetectDevice(trackHat_Device_t* device);
  * Note: The device must first be detected using the 'trackHat_DetectDevice()'
  */
 EXPORT_API
-THErrorCode trackHat_Connect(trackHat_Device_t* device);
+TH_ErrorCode trackHat_Connect(trackHat_Device_t* device);
 
 /**
  * Disconnect with TrackHat device.
  */
 EXPORT_API
-THErrorCode trackHat_Disconnect(trackHat_Device_t* device);
+TH_ErrorCode trackHat_Disconnect(trackHat_Device_t* device);
 
 /**
  * Update information about TrackHat device.
  */
 EXPORT_API
-THErrorCode trackHat_UpdateInfo(trackHat_Device_t* device);
+TH_ErrorCode trackHat_UpdateInfo(trackHat_Device_t* device);
 
 /**
  * Get uptime of the TrackHat device in seconds.
  */
 EXPORT_API
-THErrorCode trackHat_GetUptime(trackHat_Device_t* device, uint32_t* seconds);
+TH_ErrorCode trackHat_GetUptime(trackHat_Device_t* device, uint32_t* seconds);
 
 /**
  * Get list of detected points by the TrackHat camera.
@@ -72,29 +73,29 @@ THErrorCode trackHat_GetUptime(trackHat_Device_t* device, uint32_t* seconds);
  * Note: This function waits for the next set of points with 50 ms timeout.
  */
 EXPORT_API
-THErrorCode trackHat_GetDetectedPoints(trackHat_Device_t* device, trackHat_Points_t* points);
+TH_ErrorCode trackHat_GetDetectedPoints(trackHat_Device_t* device, trackHat_Points_t* points);
 
 /**
  * Add callback that will be executed automatically when new data is received.
  */
 EXPORT_API
-THErrorCode trackHat_AddCallback(trackHat_Device_t* device, trackHat_PointsCallback_t newPoints_callback);
+TH_ErrorCode trackHat_AddCallback(trackHat_Device_t* device, trackHat_PointsCallback_t newPoints_callback);
 
 /**
  * Remove previously added callback.
  */
 EXPORT_API
-THErrorCode trackHat_RemoveCallback(trackHat_Device_t* device, trackHat_PointsCallback_t newPoints_callback);
+TH_ErrorCode trackHat_RemoveCallback(trackHat_Device_t* device, trackHat_PointsCallback_t newPoints_callback);
 
 /**
  * Remove all previously added callbacks.
  */
 EXPORT_API
-THErrorCode trackHat_RemoveAllCallbacks(trackHat_Device_t* device);
+TH_ErrorCode trackHat_RemoveAllCallbacks(trackHat_Device_t* device);
 
 
 #ifdef __cplusplus
-}	// extern "C"
+  } // extern "C"
 #endif
 
 #endif //_TRACK_HAT_DRIVER_H_

@@ -3,7 +3,7 @@
 // Author: Piotr Nowicki <piotr.nowicki@wizzdev.pl>
 //------------------------------------------------------
 
-#include "track-hat-driver.h"
+#include "track_hat_driver.h"
 
 
 void trackHat_Initialize(trackHat_Device_t* device)

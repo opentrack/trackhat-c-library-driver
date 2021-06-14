@@ -1,6 +1,6 @@
 # Set sources for the library
 set(TRACK_HAT_DRIVER_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/track-hat-driver.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/track_hat_driver.cpp)
 
 # Set headers for the library
 set(TRACK_HAT_DRIVER_INCLUDES
@@ -8,5 +8,5 @@ set(TRACK_HAT_DRIVER_INCLUDES
 
 # Set headers to install
 set(TRACK_HAT_DRIVER_INCLUDES_INSTALL
-    ${CMAKE_CURRENT_SOURCE_DIR}/track-hat-driver.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/track-hat-types.h)
+    ${CMAKE_CURRENT_SOURCE_DIR}/track_hat_driver.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/track_hat_types.h)

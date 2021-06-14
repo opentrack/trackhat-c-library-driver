@@ -10,7 +10,7 @@ include_directories(${CMAKE_SOURCE_DIR}/src)
 
 # Set sources
 set(SOURCES
-  track-hat-test-app.cpp)
+  track_hat_test_app.cpp)
 
 # Shared library target
 add_executable(

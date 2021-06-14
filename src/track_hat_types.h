@@ -1,5 +1,5 @@
 // File:   track-hat-types.h
-// Brief:  TrackHat driver error codes
+// Brief:  TrackHat driver types
 // Author: Piotr Nowicki <piotr.nowicki@wizzdev.pl>
 //------------------------------------------------------
 
@@ -8,24 +8,25 @@
 
 /* Export symbol as in C language. */
 #ifdef __cplusplus
-  extern "C" {
+  extern "C"
+  {
 #endif
 
 #include <stdint.h>
 
 
 /* TrackHat library error codes. */
-enum THErrorCode
+enum TH_ErrorCode
 {
-  THE_SUCCESS = 0,
-  THE_ERROR_DEVICE_NOT_DETECTED = -1,
-  THE_ERROR_DEVICE_DISCONECTED = -2,
-  THE_ERROR_DEVICE_COMUNICATION_FAILD = -3,
-  THE_ERROR_DEVICE_COMUNICATION_TIMEOUT = -4,
-  THE_ERROR_CAMERA_INTERNAL_BROKEN = -5,
-  THE_ERROR_CAMERA_INITIALIZING_FAILD = -6,
-  THE_ERROR_CAMERA_SELFT_TEST_FAILD = -7,
-  THE_ERROR_WRONG_PARAMETER = -8,
+  TH_SUCCESS = 0,
+  TH_ERROR_DEVICE_NOT_DETECTED = -1,
+  TH_ERROR_DEVICE_DISCONECTED = -2,
+  TH_ERROR_DEVICE_COMUNICATION_FAILD = -3,
+  TH_ERROR_DEVICE_COMUNICATION_TIMEOUT = -4,
+  TH_ERROR_CAMERA_INTERNAL_BROKEN = -5,
+  TH_ERROR_CAMERA_INITIALIZING_FAILD = -6,
+  TH_ERROR_CAMERA_SELFT_TEST_FAILD = -7,
+  TH_ERROR_WRONG_PARAMETER = -8,
 };
 
 /* Maximum number of points detected by TrackHat camera. */
@@ -59,11 +60,11 @@ typedef struct
 /**
  * Declaration type of callback to call after receiving new points from the TrackHat device.
  */
-typedef void (*trackHat_PointsCallback_t)(THErrorCode error, const trackHat_Points_t* const points);
+typedef void (*trackHat_PointsCallback_t)(TH_ErrorCode error, const trackHat_Points_t* const points);
 
 
 #ifdef __cplusplus
-} // extern "C"
+  } // extern "C"
 #endif
 
 #endif //_TRACK_HAT_TYPES_H_
