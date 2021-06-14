@@ -4,8 +4,11 @@ This is C library as driver for the TrackHat camera connected via USB dedicated 
 systems.
 
 ## Prerequisities
+To work with the library, the following components are required:
 
-TODO
+* cmake (3.20+)
+* Microsoft Visual Studio 2019 with "Desktop development with C++" package
+* NSIS (Nullsoft Scriptable Install System)
 
 ### Compilation
 
