@@ -1,4 +1,4 @@
-// File:   track-hat-driver.h
+// File:   track_hat_driver.h
 // Brief:  TrackHat driver library API
 // Author: Piotr Nowicki <piotr.nowicki@wizzdev.pl>
 //------------------------------------------------------
@@ -25,18 +25,33 @@
 
 /**
  * Initialize structure 'track_hat_device_t'.
+ * 
+ * \param[in]  device   pointer to trackHat_Device_t.
+ *
+ * \return     TH_SUCCESS or error code.
  */
 EXPORT_API
-void trackHat_Initialize(trackHat_Device_t* device);
+TH_ErrorCode trackHat_Initialize(trackHat_Device_t* device);
 
 /**
  * Deinitialize structure 'track_hat_device_t' and disconnect device (if connected).
+ * 
+ * * Note: 'device' parameter should be first initialized with 'trackHat_Initialize()'.
+ *
+ * \param[in]  device   pointer to trackHat_Device_t.
+ *
  */
 EXPORT_API
-TH_ErrorCode trackHat_Deinitialize(trackHat_Device_t* device);
+void trackHat_Deinitialize(trackHat_Device_t* device);
 
 /**
  * Detect TrackHat device connected to USB port.
+ * 
+ * Note: 'device' parameter should be first initialized with 'trackHat_Initialize()'.
+ *
+ * \param[in]  device   pointer to trackHat_Device_t.
+ *
+ * \return     TH_SUCCESS if detected or error code.
  */
 EXPORT_API
 TH_ErrorCode trackHat_DetectDevice(trackHat_Device_t* device);

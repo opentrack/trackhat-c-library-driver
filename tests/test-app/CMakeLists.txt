@@ -24,10 +24,9 @@ target_link_libraries(
 
 # Copy track-hat.dll
 add_custom_command(
-  TARGET track-hat-test POST_BUILD
+  TARGET track-hat-test PRE_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:track-hat>
-  ${CMAKE_CURRENT_BINARY_DIR}
-)
+  $<TARGET_FILE_DIR:track-hat-test>)
 
 install(
   TARGETS track-hat-test

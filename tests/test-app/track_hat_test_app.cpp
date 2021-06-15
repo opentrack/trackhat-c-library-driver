@@ -1,4 +1,4 @@
-// File:   track-hat-test-app.cpp
+// File:   track_hat_test_app.cpp
 // Brief:  Sample test application for TrackHat driver
 // Author: Piotr Nowicki <piotr.nowicki@wizzdev.pl>
 //------------------------------------------------------
@@ -10,8 +10,28 @@
 
 int main()
 {
-  trackHat_Device_t device;
-  trackHat_Initialize(&device);
-  system("pause");
-  return 0;
+    trackHat_Device_t device;
+    TH_ErrorCode result;
+
+    result = trackHat_Initialize(&device);
+    if (TH_SUCCESS != result)
+    {
+        printf("Initializing filed. Error %d\n", result);
+        goto exit;
+    }
+
+    result = trackHat_DetectDevice(&device);
+    if (TH_SUCCESS != result)
+    {
+        printf("Device not detected. Error %d\n", result);
+        goto deinitialize_exit;
+    }
+
+
+deinitialize_exit:
+    trackHat_Deinitialize(&device);
+
+exit:
+    system("pause");
+    return 0;
 }
