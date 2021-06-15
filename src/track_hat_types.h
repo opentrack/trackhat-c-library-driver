@@ -1,4 +1,4 @@
-// File:   track-hat-types.h
+// File:   track_hat_types.h
 // Brief:  TrackHat driver types
 // Author: Piotr Nowicki <piotr.nowicki@wizzdev.pl>
 //------------------------------------------------------

@@ -1,4 +1,4 @@
-// File:   track-hat-driver.cpp
+// File:   track_hat_driver.cpp
 // Brief:  TrackHat driver library
 // Author: Piotr Nowicki <piotr.nowicki@wizzdev.pl>
 //------------------------------------------------------

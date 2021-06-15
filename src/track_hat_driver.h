@@ -1,4 +1,4 @@
-// File:   track-hat-driver.h
+// File:   track_hat_driver.h
 // Brief:  TrackHat driver library API
 // Author: Piotr Nowicki <piotr.nowicki@wizzdev.pl>
 //------------------------------------------------------

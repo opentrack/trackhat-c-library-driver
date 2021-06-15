@@ -1,4 +1,4 @@
-// File:   track-hat-test-app.cpp
+// File:   track_hat_test_app.cpp
 // Brief:  Sample test application for TrackHat driver
 // Author: Piotr Nowicki <piotr.nowicki@wizzdev.pl>
 //------------------------------------------------------
