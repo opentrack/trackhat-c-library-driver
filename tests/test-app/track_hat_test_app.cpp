@@ -11,7 +11,18 @@
 int main()
 {
   trackHat_Device_t device;
-  trackHat_Initialize(&device);
+  TH_ErrorCode result;
+
+  result = trackHat_Initialize(&device);
+  if (TH_SUCCESS != result)
+  {
+    printf("Initializing filed. Error %d\n", result);
+    goto exit;
+  }
+
+  trackHat_Deinitialize(&device);
+
+exit:
   system("pause");
   return 0;
 }

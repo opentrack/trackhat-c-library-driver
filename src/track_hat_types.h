@@ -35,7 +35,7 @@ enum TH_ErrorCode
 /* TrackHat device instance.  */
 typedef struct
 {
-  void*    m_device;
+  void*    m_internal;
   uint32_t m_serialNumber;
   uint8_t  m_softwareVersionMajor;
   uint8_t  m_softwareVersionMinor;
