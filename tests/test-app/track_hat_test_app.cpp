@@ -20,6 +20,15 @@ int main()
     goto exit;
   }
 
+  result = trackHat_DetectDevice(&device);
+  if (TH_SUCCESS != result)
+  {
+    printf("Device not detected. Error %d\n", result);
+    goto deinitialize_exit;
+  }
+
+
+deinitialize_exit:
   trackHat_Deinitialize(&device);
 
 exit:

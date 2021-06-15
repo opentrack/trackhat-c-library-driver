@@ -46,6 +46,12 @@ void trackHat_Deinitialize(trackHat_Device_t* device);
 
 /**
  * Detect TrackHat device connected to USB port.
+ * 
+ * Note: 'device' parameter should be first initialized with 'trackHat_Initialize()'.
+ *
+ * \param[in]  device   pointer to trackHat_Device_t.
+ *
+ * \return     TH_SUCCESS if detected or error code.
  */
 EXPORT_API
 TH_ErrorCode trackHat_DetectDevice(trackHat_Device_t* device);

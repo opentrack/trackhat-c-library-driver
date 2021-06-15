@@ -27,6 +27,7 @@ enum TH_ErrorCode
   TH_ERROR_CAMERA_INITIALIZING_FAILD = -6,
   TH_ERROR_CAMERA_SELFT_TEST_FAILD = -7,
   TH_ERROR_WRONG_PARAMETER = -8,
+  TH_MEMORY_ALLOCATION_FIELD = -9,
 };
 
 /* Maximum number of points detected by TrackHat camera. */
@@ -35,7 +36,7 @@ enum TH_ErrorCode
 /* TrackHat device instance.  */
 typedef struct
 {
-  void*    m_internal;
+  void*    m_pInternal; /* Private context data of the device */
   uint32_t m_serialNumber;
   uint8_t  m_softwareVersionMajor;
   uint8_t  m_softwareVersionMinor;
