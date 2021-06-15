@@ -10,28 +10,28 @@
 
 int main()
 {
-  trackHat_Device_t device;
-  TH_ErrorCode result;
+    trackHat_Device_t device;
+    TH_ErrorCode result;
 
-  result = trackHat_Initialize(&device);
-  if (TH_SUCCESS != result)
-  {
-    printf("Initializing filed. Error %d\n", result);
-    goto exit;
-  }
+    result = trackHat_Initialize(&device);
+    if (TH_SUCCESS != result)
+    {
+        printf("Initializing filed. Error %d\n", result);
+        goto exit;
+    }
 
-  result = trackHat_DetectDevice(&device);
-  if (TH_SUCCESS != result)
-  {
-    printf("Device not detected. Error %d\n", result);
-    goto deinitialize_exit;
-  }
+    result = trackHat_DetectDevice(&device);
+    if (TH_SUCCESS != result)
+    {
+        printf("Device not detected. Error %d\n", result);
+        goto deinitialize_exit;
+    }
 
 
 deinitialize_exit:
-  trackHat_Deinitialize(&device);
+    trackHat_Deinitialize(&device);
 
 exit:
-  system("pause");
-  return 0;
+    system("pause");
+    return 0;
 }

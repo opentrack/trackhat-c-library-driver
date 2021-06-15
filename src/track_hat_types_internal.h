@@ -12,7 +12,7 @@
 /* TrackHat device internal instance. */
 typedef struct
 {
-  uint16_t m_serialCom;
+    uint16_t m_serialCom;
 } trackHat_Internal_t;
 
 

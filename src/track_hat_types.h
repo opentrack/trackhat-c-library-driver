@@ -18,44 +18,44 @@
 /* TrackHat library error codes. */
 enum TH_ErrorCode
 {
-  TH_SUCCESS = 0,
-  TH_ERROR_DEVICE_NOT_DETECTED = -1,
-  TH_ERROR_DEVICE_DISCONECTED = -2,
-  TH_ERROR_DEVICE_COMUNICATION_FAILD = -3,
-  TH_ERROR_DEVICE_COMUNICATION_TIMEOUT = -4,
-  TH_ERROR_CAMERA_INTERNAL_BROKEN = -5,
-  TH_ERROR_CAMERA_INITIALIZING_FAILD = -6,
-  TH_ERROR_CAMERA_SELFT_TEST_FAILD = -7,
-  TH_ERROR_WRONG_PARAMETER = -8,
-  TH_MEMORY_ALLOCATION_FIELD = -9,
+    TH_SUCCESS = 0,
+    TH_ERROR_DEVICE_NOT_DETECTED = -1,
+    TH_ERROR_DEVICE_DISCONECTED = -2,
+    TH_ERROR_DEVICE_COMUNICATION_FAILD = -3,
+    TH_ERROR_DEVICE_COMUNICATION_TIMEOUT = -4,
+    TH_ERROR_CAMERA_INTERNAL_BROKEN = -5,
+    TH_ERROR_CAMERA_INITIALIZING_FAILD = -6,
+    TH_ERROR_CAMERA_SELFT_TEST_FAILD = -7,
+    TH_ERROR_WRONG_PARAMETER = -8,
+    TH_MEMORY_ALLOCATION_FIELD = -9,
 };
 
 /* Maximum number of points detected by TrackHat camera. */
 #define TRACK_HAT_POINTS_NUMBER 16
 
-/* TrackHat device instance.  */
+/* TrackHat device instance. */
 typedef struct
 {
-  void*    m_pInternal; /* Private context data of the device */
-  uint32_t m_serialNumber;
-  uint8_t  m_softwareVersionMajor;
-  uint8_t  m_softwareVersionMinor;
-  uint8_t  m_hardwareVersion;
-  uint8_t  m_isIdleMode;
+    void*    m_pInternal; /* Private context data of the device */
+    uint32_t m_serialNumber;
+    uint8_t  m_softwareVersionMajor;
+    uint8_t  m_softwareVersionMinor;
+    uint8_t  m_hardwareVersion;
+    uint8_t  m_isIdleMode;
 } trackHat_Device_t;
 
 /* TrackHat single point. */
 typedef struct
 {
-  uint16_t m_x;
-  uint16_t m_y;
-  uint8_t  m_brightness;
+    uint16_t m_x;
+    uint16_t m_y;
+    uint8_t  m_brightness;
 } trackHat_Point_t;
 
 /* TrackHat set of points. */
 typedef struct
 {
-  trackHat_Point_t m_point[TRACK_HAT_POINTS_NUMBER];
+    trackHat_Point_t m_point[TRACK_HAT_POINTS_NUMBER];
 } trackHat_Points_t;
 
 /**
