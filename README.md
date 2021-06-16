@@ -7,7 +7,7 @@ systems.
 To work with the library, the following components are required:
 
 * cmake (3.10+)
-* Microsoft Visual Studio 2019 with "Desktop development with C++" package
+* Microsoft Visual Studio 2017 with "Desktop development with C++" package
 * Inno Setup 6
 
 ### Compilation

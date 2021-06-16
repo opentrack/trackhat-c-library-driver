@@ -1,10 +1,12 @@
 set CMAKE="C:\Program Files\CMake\bin\cmake.exe"
 set INNOSETUP="C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+set MSBUILD="C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe"
+set VISUAL_STUDIO_USED= "Visual Studio 15 2017 Win64"
+rem set VISUAL_STUDIO_USED= "Visual Studio 16 2019"
 set SOURCE_DIR=%~dp0..
 set BUILD_DIR="%SOURCE_DIR%\build"
 set SCRIPTS_DIR="%SOURCE_DIR%\scripts"
 set CL=/MP
-set VISUAL_STUDIO_USED= "Visual Studio 16 2019"
 set DEBUG=0
 
 echo on
@@ -67,7 +69,7 @@ if %errorlevel% neq 0 goto :showerror
 
 rem rem Compile Visual Studio projects
 
-msbuild ALL_BUILD.vcxproj /property:Configuration=%CONFIGURATION% /p:Platform="x64"
+%MSBUILD% ALL_BUILD.vcxproj /property:Configuration=%CONFIGURATION% /p:Platform="x64"
 if %errorlevel% neq 0 goto :showerror
 
 rem Create installer
