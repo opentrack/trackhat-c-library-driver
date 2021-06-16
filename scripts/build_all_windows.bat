@@ -6,52 +6,77 @@ rem set VISUAL_STUDIO_USED= "Visual Studio 16 2019"
 set SOURCE_DIR=%~dp0..
 set BUILD_DIR="%SOURCE_DIR%\build"
 set SCRIPTS_DIR="%SOURCE_DIR%\scripts"
+set SIGN_SCRIPT="%SCRIPTS_DIR%\sign_artifact.bat"
 set CL=/MP
-set DEBUG=0
+set DEBUG_BUILD=1
+set SIGN_SOFTWARE=0
+set CREATE_INSTALER=0
 
 echo on
 setlocal
-@if [%1]==[/?] goto :Help
-goto :Main
-
-:Help
-echo Compile TrackHat driver with tools^
-
-Usage: %0 [OPTION]^
-
-General options:^
-
-    /? Show this help^
-
-    /DEBUG:1 Build in debug mode. Otherwise mode RelWithDebInfo will be used.
-
-exit /b 0
 
 
-:ParseParameters
-    If "%~1"=="" exit /b
+goto :ParseParameters
 
-    SET TempVar=%~1
-    IF "%TempVar:~0,7%"=="/DEBUG:" (
-        set DEBUG=%TempVar:~7,250%
-        exit /b
-    )
+:PrintHelp
+echo.
+echo Compile TrackHat driver with tools (default as Debug).
+echo.
+echo Usage: %1 [OPTION]
+echo.
+echo General options:
+echo.
+echo    --help or /?    Show this help.
+echo    --release       Build as a Release without debug symbols.
+echo    --sign          Sign the software with a certificate (only for Release).
+echo    --installer     Create installer for the driver after build (only for Release).
+echo.
 exit /b
 
 
-:Main
-FOR %%A IN (%*) DO (
-echo A="%%A"
-    call :ParseParameters %%A
-)
+:ParseParameters
+    for %%A in (%*) do (
+        if "%%A"=="--help" (
+            call :PrintHelp %0
+            goto :exit
 
-if %DEBUG%==1 (
+        ) else if "%%A"=="/?" (
+            call :PrintHelp %0
+            goto :exit
+
+        ) else if "%%A"=="--release" (
+            echo "Create release build."
+            set DEBUG_BUILD=0
+
+        ) else if "%%A"=="--sign" (
+            echo "Sign the software with a certificate."
+            set SIGN_SOFTWARE=1
+
+        ) else if "%%A"=="--installer" (
+            echo "Create installer."
+            set CREATE_INSTALER=1
+
+        ) else (
+            echo "Wrong parameter. Printing help"
+            call :PrintHelp %0
+            goto :showerror
+        )
+    )
+
+echo "Script variables:"
+echo "DEBUG_BUILD=%DEBUG_BUILD%"
+echo "SIGN_SOFTWARE=%SIGN_SOFTWARE%"
+echo "CREATE_INSTALER=%CREATE_INSTALER%"
+
+
+if %DEBUG_BUILD%==1 (
     set CONFIGURATION=Debug
 ) else (
     set CONFIGURATION=Release
 )
 
-rem Create Visual Studio projects
+
+echo Create Visual Studio projects
 
 if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 cd "%BUILD_DIR%"
@@ -67,15 +92,50 @@ cmake -G %VISUAL_STUDIO_USED% ..^
     -DCMAKE_C_FLAGS_DEBUG:string="/MTd"
 if %errorlevel% neq 0 goto :showerror
 
-rem rem Compile Visual Studio projects
+
+echo Compile Visual Studio projects
 
 %MSBUILD% ALL_BUILD.vcxproj /property:Configuration=%CONFIGURATION% /p:Platform="x64"
 if %errorlevel% neq 0 goto :showerror
 
-rem Create installer
 
-if %DEBUG%==0 (
-    %INNOSETUP% %SCRIPTS_DIR%/installer.iss
+echo Signing binaries
+
+if %SIGN_SOFTWARE%==1 (
+    if %DEBUG_BUILD%==0 (
+        "%SIGN_SCRIPT%" "TrackHat" "%BUILD_DIR%\src\Release\track-hat.dll"
+    ) else (
+        echo Error: software signing is available only for Release.
+        goto :showerror
+    )
+)
+if %errorlevel% neq 0 goto :showerror
+
+
+echo Create installer
+
+if %CREATE_INSTALER%==1 (
+    if %DEBUG_BUILD%==0 (
+        %INNOSETUP% %SCRIPTS_DIR%/installer.iss
+    ) else (
+        echo Error: creating installer is avalible only for Release.
+        goto :showerror
+    )
+)
+if %errorlevel% neq 0 goto :showerror
+
+
+echo Signing installer
+
+if %SIGN_SOFTWARE%==1 (
+    if %CREATE_INSTALER%==1 (
+        if %DEBUG_BUILD%==0 (
+            "%SIGN_SCRIPT%" "TrackHat" "%BUILD_DIR%\src\Release\track-hat.dll"
+        ) else (
+            echo Error: software signing is available only for Release.
+            goto :showerror
+        )
+    )
 )
 if %errorlevel% neq 0 goto :showerror
 
@@ -84,6 +144,6 @@ goto :exit
 
 :showerror
 echo Build error occurred
-pause
+exit /b 1
 
 :exit
