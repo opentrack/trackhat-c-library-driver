@@ -20,13 +20,13 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
-LicenseFile=C:\Users\pnowicki\Desktop\My\TrackHat\proj\trackhat-c-library-driver\LICENSE.txt
+LicenseFile=..\LICENSE.txt
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
-OutputDir=C:\Users\pnowicki\Desktop\My\TrackHat\proj\trackhat-c-library-driver\build\installer
+OutputDir=..\build\installer
 OutputBaseFilename=TrackHat-driver-installer-{#MyAppVersion}
-SetupIconFile=C:\Users\pnowicki\Desktop\My\TrackHat\proj\trackhat-c-library-driver\others\trackhat.ico
+SetupIconFile=..\others\trackhat.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -39,9 +39,9 @@ ChangesEnvironment=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "C:\Users\pnowicki\Desktop\My\TrackHat\proj\trackhat-c-library-driver\build\src\Release\track-hat.dll"; DestDir: "{app}"; Flags: ignoreversion;
-Source: "C:\Users\pnowicki\Desktop\My\TrackHat\proj\trackhat-c-library-driver\src\track_hat_driver.h"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\pnowicki\Desktop\My\TrackHat\proj\trackhat-c-library-driver\src\track_hat_types.h"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\src\Release\track-hat.dll"; DestDir: "{app}"; Flags: ignoreversion;
+Source: "..\src\track_hat_driver.h"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\src\track_hat_types.h"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
