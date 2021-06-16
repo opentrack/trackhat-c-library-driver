@@ -14,16 +14,3 @@ add_subdirectory(src)
 
 # Add tests
 add_subdirectory(tests)
-
-# Installer
-if (MSVC)
-    include (InstallRequiredSystemLibraries)
-    set(CPACK_PACKAGE_NAME "TrackHat driver")
-    set(CPACK_GENERATOR NSIS)
-endif (MSVC)
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "TrackHat driver - installer")
-set(CPACK_PACKAGE_VENDOR "WizzDev")
-set(CPACK_PACKAGE_VERSION ${LIBRARY_VERSION})
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
-set(CPACK_OUTPUT_FILE_PREFIX "installer")
-include(CPack)
