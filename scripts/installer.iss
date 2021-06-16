@@ -47,3 +47,51 @@ Source: "C:\Users\pnowicki\Desktop\My\TrackHat\proj\trackhat-c-library-driver\sr
 [Icons]
 Name: "{group}\{cm:ProgramOnTheWeb,{#MyAppName}}"; Filename: "{#MyAppURL}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
+
+[Registry]
+Root: "HKLM"; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; \
+Check: IsAdmin and NotExistsInPathHKLM(ExpandConstant('{app}'))
+
+Root: "HKCU"; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; \
+Check: not IsAdmin and NotExistsInPathHKCU(ExpandConstant('{app}'))
+
+
+[Code]
+const
+  EnvironmentKeyHKLM = 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment';
+  EnvironmentKeyHKCU = 'Environment';
+  VariableName       = 'Path';
+
+
+// Check if 'Param' exists in LOCAL_MACHINE Path
+function NotExistsInPathHKLM(Param: string): boolean;
+var
+  OrigPath: string;
+begin
+  if not RegQueryStringValue(HKEY_LOCAL_MACHINE, EnvironmentKeyHKLM,
+                             VariableName, OrigPath)
+then begin
+  Result := True;
+  exit;
+end;
+  // look for the path with leading and trailing semicolon
+  // Pos() returns 0 if not found
+  Result := Pos(';' + Param + ';', ';' + OrigPath + ';') = 0;
+end;
+
+
+// Check if 'Param' exists in HKEY_CURRENT_USER Path
+function NotExistsInPathHKCU(Param: string): boolean;
+var
+  OrigPath: string;
+begin
+  if not RegQueryStringValue(HKEY_CURRENT_USER, EnvironmentKeyHKCU,
+                             VariableName, OrigPath)
+then begin
+  Result := True;
+  exit;
+end;
+  // look for the path with leading and trailing semicolon
+  // Pos() returns 0 if not found
+  Result := Pos(';' + Param + ';', ';' + OrigPath + ';') = 0;
+end;
