@@ -95,3 +95,59 @@ end;
   // Pos() returns 0 if not found
   Result := Pos(';' + Param + ';', ';' + OrigPath + ';') = 0;
 end;
+
+
+// Remove variable from Path
+procedure RemovePath(const RootKey: Integer; const SubKeyName, Path: string);
+var
+  Paths: string;
+  P: Integer;
+begin
+  if not RegQueryStringValue(RootKey, SubKeyName, VariableName, Paths) then
+    begin
+      Log('PATH not found');
+    end
+  else
+    begin
+      Log(Format('PATH is [%s]', [Paths]));
+
+      P := Pos(';' + Uppercase(Path) + ';', ';' + Uppercase(Paths) + ';');
+      if P = 0 then
+        begin
+          Log(Format('Path [%s] not found in PATH', [Path]));
+        end
+      else
+        begin
+          if P > 1 then P := P - 1;
+          Delete(Paths, P, Length(Path) + 1);
+          Log(Format('Path [%s] removed from PATH => [%s]', [Path, Paths]));
+
+          if RegWriteStringValue(RootKey, SubKeyName, VariableName, Paths) then
+            begin
+              Log('PATH written');
+            end
+          else
+            begin
+              Log('Error writing PATH');
+            end;
+        end;
+    end;
+end;
+
+// Uninstall event
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usUninstall then
+  begin
+      if IsAdmin then
+        begin
+          // MsgBox('Admin installation.', mbInformation, MB_OK)
+          RemovePath(HKEY_LOCAL_MACHINE, EnvironmentKeyHKLM, ExpandConstant('{app}'));
+        end
+      else
+        begin
+          // MsgBox('User installation.', mbInformation, MB_OK);
+          RemovePath(HKEY_CURRENT_USER, EnvironmentKeyHKCU, ExpandConstant('{app}'));
+        end;
+  end;
+end;
