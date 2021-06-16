@@ -56,15 +56,15 @@ rem Create Visual Studio projects
 if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 cd "%BUILD_DIR%"
 cmake -G %VISUAL_STUDIO_USED% ..^
-	-UINSTALL_BIN_DIR^
-	-UINSTALL_INC_DIR^
-	-UINSTALL_LIB_DIR^
-	-UINSTALL_MAN_DIR^
-	-UINSTALL_PKGCONFIG_DIR^
-	-DCMAKE_CXX_FLAGS_RELEASE:string="/MT"^
-	-DCMAKE_CXX_FLAGS_DEBUG:string="/MTd"^
-	-DCMAKE_C_FLAGS_RELEASE:string="/MT"^
-	-DCMAKE_C_FLAGS_DEBUG:string="/MTd"
+    -UINSTALL_BIN_DIR^
+    -UINSTALL_INC_DIR^
+    -UINSTALL_LIB_DIR^
+    -UINSTALL_MAN_DIR^
+    -UINSTALL_PKGCONFIG_DIR^
+    -DCMAKE_CXX_FLAGS_RELEASE:string="/MT"^
+    -DCMAKE_CXX_FLAGS_DEBUG:string="/MTd"^
+    -DCMAKE_C_FLAGS_RELEASE:string="/MT"^
+    -DCMAKE_C_FLAGS_DEBUG:string="/MTd"
 if %errorlevel% neq 0 goto :showerror
 
 rem rem Compile Visual Studio projects
