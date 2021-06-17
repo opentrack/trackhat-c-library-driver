@@ -1,6 +1,8 @@
 set CMAKE="C:\Program Files\CMake\bin\cmake.exe"
+set INNOSETUP="C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 set SOURCE_DIR=%~dp0..
 set BUILD_DIR="%SOURCE_DIR%\build"
+set SCRIPTS_DIR="%SOURCE_DIR%\scripts"
 set CL=/MP
 set VISUAL_STUDIO_USED= "Visual Studio 16 2019"
 set DEBUG=0
@@ -71,7 +73,7 @@ if %errorlevel% neq 0 goto :showerror
 rem Create installer
 
 if %DEBUG%==0 (
-    cpack .
+    %INNOSETUP% %SCRIPTS_DIR%/installer.iss
 )
 if %errorlevel% neq 0 goto :showerror
 
