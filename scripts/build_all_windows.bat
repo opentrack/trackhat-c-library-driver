@@ -8,6 +8,8 @@ set BUILD_DIR="%SOURCE_DIR%\build"
 set SCRIPTS_DIR="%SOURCE_DIR%\scripts"
 set SIGN_SCRIPT="%SCRIPTS_DIR%\sign_artifact.bat"
 set CL=/MP
+
+rem Default build configuration
 set DEBUG_BUILD=1
 set SIGN_SOFTWARE=0
 set CREATE_INSTALER=0
@@ -63,10 +65,10 @@ exit /b
         )
     )
 
-echo "Script variables:"
-echo "DEBUG_BUILD=%DEBUG_BUILD%"
-echo "SIGN_SOFTWARE=%SIGN_SOFTWARE%"
-echo "CREATE_INSTALER=%CREATE_INSTALER%"
+echo Script variables:
+echo DEBUG_BUILD=%DEBUG_BUILD%
+echo SIGN_SOFTWARE=%SIGN_SOFTWARE%
+echo CREATE_INSTALER=%CREATE_INSTALER%
 
 
 if %DEBUG_BUILD%==1 (
@@ -104,7 +106,7 @@ echo Signing binaries
 
 if %SIGN_SOFTWARE%==1 (
     if %DEBUG_BUILD%==0 (
-        "%SIGN_SCRIPT%" "TrackHat" "%BUILD_DIR%\src\Release\track-hat.dll"
+        call "%SIGN_SCRIPT%" "TrackHat" "%BUILD_DIR%\src\Release\track-hat.dll"
     ) else (
         echo Error: software signing is available only for Release.
         goto :showerror
@@ -131,7 +133,7 @@ echo Signing installer
 if %SIGN_SOFTWARE%==1 (
     if %CREATE_INSTALER%==1 (
         if %DEBUG_BUILD%==0 (
-            "%SIGN_SCRIPT%" "TrackHat" "%BUILD_DIR%\src\Release\track-hat.dll"
+            call "%SIGN_SCRIPT%" "TrackHat" "%BUILD_DIR%\installer\TrackHat-driver-installer-*.exe"
         ) else (
             echo Error: software signing is available only for Release.
             goto :showerror
@@ -144,7 +146,9 @@ endlocal
 goto :exit
 
 :showerror
-echo Build error occurred
+echo Build ERROR occurred
 exit /b 1
 
 :exit
+echo Building SUCCESSFUL
+exit /b 0
