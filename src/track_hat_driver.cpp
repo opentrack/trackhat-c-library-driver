@@ -6,12 +6,23 @@
 #include "track_hat_driver.h"
 #include "track_hat_driver_internal.h"
 
+#include "logger.h"
 #include "usb_serial.h"
 
 #include <cstdio>
 #include <string>
 #include <vector>
 
+
+void trackHat_EnableDebugMode()
+{
+    logger_SetEnable(true);
+}
+
+void trackHat_DisableDebugMode()
+{
+    logger_SetEnable(false);
+}
 
 TH_ErrorCode trackHat_Initialize(trackHat_Device_t* device)
 {
@@ -116,7 +127,7 @@ TH_ErrorCode trackHat_UpdateInfo(trackHat_Device_t* device)
             else if (readSize == 1)
             {
                 inputBuffer.push_back(serialInput[0]);
-                printf("Buffer len %dn", inputBuffer.size());
+                printf("Buffer len %d\n", inputBuffer.size());
             }
         }
 

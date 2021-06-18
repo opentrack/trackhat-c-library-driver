@@ -24,6 +24,19 @@
 
 
 /**
+ * Enables the debugging mode of the library, i.e. the console output will show additional
+ * messages about the operation of the TrackHat library (disabled by default).
+ */
+EXPORT_API
+void trackHat_EnableDebugMode();
+
+/**
+ * Disable the debugging mode of the library. 
+ */
+EXPORT_API
+void trackHat_DisableDebugMode();
+
+/**
  * Initialize structure 'track_hat_device_t'.
  * 
  * \param[in]  device   pointer to trackHat_Device_t.

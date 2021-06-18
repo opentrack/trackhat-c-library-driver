@@ -13,6 +13,9 @@ int main()
     trackHat_Device_t device;
     TH_ErrorCode result;
 
+    // Enable debug mode
+    trackHat_EnableDebugMode();
+
     // Intitialize structure
     result = trackHat_Initialize(&device);
     if (TH_SUCCESS != result)

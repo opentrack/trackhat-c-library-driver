@@ -1,4 +1,4 @@
-// File:   usb_serial.cpp
+// File:   usb_serial.h
 // Brief:  Functions to control serial port over USB
 // Author: Piotr Nowicki <piotr.nowicki@wizzdev.pl>
 //------------------------------------------------------
