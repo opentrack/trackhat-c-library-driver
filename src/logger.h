@@ -12,6 +12,7 @@
 
 extern const char logInfoPrefix[];
 extern const char logErrorPrefix[];
+extern const char logFunctionBadUse[];
 
 
 #define LOG(M, P)                          \
