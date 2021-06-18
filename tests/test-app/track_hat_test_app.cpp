@@ -37,6 +37,12 @@ int main()
         goto deinitialize_exit;
     }
 
+    // Update information about device
+    result = trackHat_UpdateInfo(&device);
+    if (TH_SUCCESS != result)
+    {
+        printf("Device not detected. Error %d\n", result);
+    }
 
     // Disconnect from device
     result = trackHat_Disconnect(&device);

@@ -128,18 +128,18 @@ TH_ErrorCode usbSerialOpen(usbSerial_t& serial)
     sprintf(serial.m_comFileName, "\\\\.\\COM%d", serial.m_comNumber);
 
     //Open the serial COM port
-    serial.m_comHandler = CreateFile(serial.m_comFileName, // COM friendly name
-                        GENERIC_READ | GENERIC_WRITE,      // Read/Write Access
-                        0,                                 // No Sharing, ports cant be shared
-                        NULL,                              // No Security
-                        OPEN_EXISTING,                     // Open existing port only
-                        0,                                 // Non Overlapped I/O
-                        NULL);                             // Null for Comm Devices
+    serial.m_comHandler = CreateFile(serial.m_comFileName,         // COM friendly name
+                                     GENERIC_READ | GENERIC_WRITE, // Read/Write Access
+                                     0,                            // No Sharing, ports cant be shared
+                                     NULL,                         // No Security
+                                     OPEN_EXISTING,                // Open existing port only
+                                     0,                            // Non Overlapped I/O
+                                     NULL);                        // Null for Comm Devices
     if (serial.m_comHandler == INVALID_HANDLE_VALUE)
     {
         return TH_ERROR_DEVICE_COMUNICATION_FAILD;
     }
-    
+
     //Setting Timeouts
     //TODO check timouts
     serial.m_timeouts.ReadIntervalTimeout = 50;
@@ -163,5 +163,50 @@ TH_ErrorCode usbSerialClose(usbSerial_t& serial)
         CloseHandle(serial.m_comHandler);
 
     serial.m_isPortOpened = false;
+    return TH_SUCCESS;
+}
+
+TH_ErrorCode usbSerialWrite(usbSerial_t& serial, const char* const buffer, uint32_t size)
+{
+    if (serial.m_isPortOpened == false)
+        return TH_ERROR_DEVICE_NOT_OPENED;
+
+    DWORD writtenSize = 0;          // No of bytes written to the port
+    BOOL status = FALSE;
+
+    //Writing data to Serial Port
+    status = WriteFile(serial.m_comHandler, // Handle to the Serialport
+                       buffer,              // Data to be written to the port
+                       size,                // No of bytes to write into the port
+                       &writtenSize,        // No of bytes written to the port
+                       NULL);
+    if (size != static_cast<uint32_t>(writtenSize))
+    {
+        return TH_ERROR_DEVICE_COMUNICATION_FAILD;
+    }
+
+    if (status==FALSE)
+    {
+        return TH_ERROR_DEVICE_COMUNICATION_FAILD;
+    }
+
+    return TH_SUCCESS;
+}
+
+TH_ErrorCode usbSerialRead(usbSerial_t& serial, char* buffer, const uint32_t maxSize, uint32_t& readSizeOutput)
+{
+    if (serial.m_isPortOpened == false)
+        return TH_ERROR_DEVICE_NOT_OPENED;
+
+    DWORD readSize = 0;     // No of bytes read from the port
+    BOOL status = FALSE;
+
+    status = ReadFile(serial.m_comHandler, buffer, maxSize, &readSize, NULL);
+    if (status == FALSE)
+    {
+        return TH_ERROR_DEVICE_COMUNICATION_FAILD;
+    }
+
+    readSizeOutput = static_cast<uint32_t>(readSize);
     return TH_SUCCESS;
 }

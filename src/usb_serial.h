@@ -54,5 +54,32 @@ TH_ErrorCode usbSerialOpen(usbSerial_t& serial);
  */
 TH_ErrorCode usbSerialClose(usbSerial_t& serial);
 
+/**
+ * Send data via serial port.
+ *
+ * Note: Serial port must be opened befor call this function.
+ *
+ * \param[in]  serial   Structure of 'usbSerial_t'.
+ * \param[in]  buffer   Data to send.
+ * \param[in]  size     Amount of data to transfer.
+ *
+ * \return     TH_SUCCESS or error code.
+ */
+TH_ErrorCode usbSerialWrite(usbSerial_t& serial, const char* const buffer, uint32_t size);
+
+/**
+ * Receive data from serial port.
+ *
+ * Note: Serial port must be opened befor call this function.
+ * Note: If there is no data the function returns after 50 ms with 'readSizeOutput' as 0.
+ *
+ * \param[in]  serial          Structure of 'usbSerial_t'.
+ * \param[in]  buffer          Buffer for imput data.
+ * \param[in]  maxSize         Maximum buffer size.
+ * \param[out] readSizeOutput  Amount of receive data.
+ *
+ * \return     TH_SUCCESS or error code.
+ */
+TH_ErrorCode usbSerialRead(usbSerial_t& serial, char* buffer, const uint32_t maxSize, uint32_t& readSizeOutput);
 
 #endif //_USB_SERIAL_H_

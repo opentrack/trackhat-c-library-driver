@@ -10,6 +10,7 @@
 
 #include <cstdio>
 #include <string>
+#include <vector>
 
 
 TH_ErrorCode trackHat_Initialize(trackHat_Device_t* device)
@@ -74,4 +75,54 @@ TH_ErrorCode trackHat_Disconnect(trackHat_Device_t* device)
     return usbSerialClose(serial);
 }
 
+
+TH_ErrorCode trackHat_UpdateInfo(trackHat_Device_t* device)
+{
+    //TODO this function will be reimplemented
+
+    if ((device==nullptr) || (device->m_pInternal == nullptr))
+        return TH_ERROR_WRONG_PARAMETER;
+
+    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    usbSerial_t& serial = internal.m_serial;
+
+    char serialOutput[] = { 0x01, 0x02, 0x03, 0x04 };
+    char serialInput[256];
+    uint32_t readSize = 0;
+
+    std::vector<char> inputBuffer;
+
+    while (true)
+    {
+        TH_ErrorCode result = usbSerialWrite(serial, serialOutput, sizeof(serialOutput));
+        if (result != TH_SUCCESS)
+        {
+            return result;
+        }
+
+        result = usbSerialRead(serial, serialInput, sizeof(serialInput), readSize);
+        if (result != TH_SUCCESS)
+        {
+            return result;
+        }
+
+        if (inputBuffer.size() < 100)
+        {
+            if (readSize > 1)
+            {
+                inputBuffer.insert(inputBuffer.end(), serialInput, serialInput + readSize);
+                printf("Buffer len %dn", inputBuffer.size());
+            }
+            else if (readSize == 1)
+            {
+                inputBuffer.push_back(serialInput[0]);
+                printf("Buffer len %dn", inputBuffer.size());
+            }
+        }
+
+        Sleep(100);
+    }
+
+    return TH_SUCCESS;
+}
 
