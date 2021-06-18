@@ -8,6 +8,9 @@
 
 #include "usb_serial.h"
 
+#include "track_hat_types.h"
+#include "track_hat_types_internal.h"
+
 #include <cstdio>
 #include <cstring>
 #include <windows.h>
@@ -108,4 +111,57 @@ uint16_t usbGetComPort(uint16_t vendorId, uint16_t productId)
     }
 
     return detectedComPort;
+}
+
+
+TH_ErrorCode usbSerialOpen(usbSerial_t& serial)
+{
+    if (serial.m_isPortOpened)
+        return TH_ERROR_DEVICE_ALREADY_OPEN;
+
+    BOOL status = FALSE;
+
+    if (serial.m_comNumber == 0)
+        return TH_ERROR_DEVICE_NOT_DETECTED;
+
+    // "\\\\.\\COM1" is Windows format
+    sprintf(serial.m_comFileName, "\\\\.\\COM%d", serial.m_comNumber);
+
+    //Open the serial COM port
+    serial.m_comHandler = CreateFile(serial.m_comFileName, // COM friendly name
+                        GENERIC_READ | GENERIC_WRITE,      // Read/Write Access
+                        0,                                 // No Sharing, ports cant be shared
+                        NULL,                              // No Security
+                        OPEN_EXISTING,                     // Open existing port only
+                        0,                                 // Non Overlapped I/O
+                        NULL);                             // Null for Comm Devices
+    if (serial.m_comHandler == INVALID_HANDLE_VALUE)
+    {
+        return TH_ERROR_DEVICE_COMUNICATION_FAILD;
+    }
+    
+    //Setting Timeouts
+    //TODO check timouts
+    serial.m_timeouts.ReadIntervalTimeout = 50;
+    serial.m_timeouts.ReadTotalTimeoutConstant = 50;
+    serial.m_timeouts.ReadTotalTimeoutMultiplier = 1;
+    serial.m_timeouts.WriteTotalTimeoutConstant = 50;
+    serial.m_timeouts.WriteTotalTimeoutMultiplier = 1;
+
+    if (SetCommTimeouts(serial.m_comHandler, &serial.m_timeouts) == FALSE)
+    {
+        return TH_ERROR_DEVICE_COMUNICATION_FAILD;
+    }
+
+    serial.m_isPortOpened = true;
+    return TH_SUCCESS;
+}
+
+TH_ErrorCode usbSerialClose(usbSerial_t& serial)
+{
+    if (serial.m_isPortOpened)
+        CloseHandle(serial.m_comHandler);
+
+    serial.m_isPortOpened = false;
+    return TH_SUCCESS;
 }

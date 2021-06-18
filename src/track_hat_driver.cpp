@@ -48,3 +48,30 @@ TH_ErrorCode trackHat_DetectDevice(trackHat_Device_t* device)
 }
 
 
+TH_ErrorCode trackHat_Connect(trackHat_Device_t* device)
+{
+    if ((device == nullptr) || (device->m_pInternal == nullptr))
+        return TH_ERROR_WRONG_PARAMETER;
+
+    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    usbSerial_t& serial = internal.m_serial;
+
+    if (serial.m_comNumber == 0)
+        return TH_ERROR_DEVICE_NOT_DETECTED;
+
+    return usbSerialOpen(serial);
+}
+
+
+TH_ErrorCode trackHat_Disconnect(trackHat_Device_t* device)
+{
+    if ((device == nullptr) || (device->m_pInternal == nullptr))
+        return TH_ERROR_WRONG_PARAMETER;
+
+    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    usbSerial_t& serial = internal.m_serial;
+
+    return usbSerialClose(serial);
+}
+
+
