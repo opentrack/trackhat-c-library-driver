@@ -8,6 +8,7 @@
 
 #include "usb_serial.h"
 
+#include "logger.h"
 #include "track_hat_types.h"
 #include "track_hat_types_internal.h"
 
@@ -25,7 +26,6 @@ uint16_t usbGetComPort(uint16_t vendorId, uint16_t productId)
     PCSTR devEnum = "USB";
     DEVPROPTYPE ulPropertyType;
     DWORD dwSize = 0;
-    DWORD error = 0;
     uint16_t detectedComPort = 0;
     char expectedDeviceIds[80];
     char szBuffer[1024] = { 0 };
@@ -72,8 +72,8 @@ uint16_t usbGetComPort(uint16_t vendorId, uint16_t productId)
                                                       DIREG_DEV, KEY_READ);
             if (hDeviceRegistryKey == INVALID_HANDLE_VALUE)
             {
-                //Not able to open registry
-                error = GetLastError();
+                //This behavior may be correct when looking at all possible devices
+                //LOG_ERROR("Cannot open Windows register. Error " << GetLastError() << ".");
                 break;
             }
             else
@@ -116,13 +116,19 @@ uint16_t usbGetComPort(uint16_t vendorId, uint16_t productId)
 
 TH_ErrorCode usbSerialOpen(usbSerial_t& serial)
 {
-    if (serial.m_isPortOpened)
+    if (serial.m_isPortOpen)
+    {
+        LOG_ERROR("Cannot open a port that is already open.");
         return TH_ERROR_DEVICE_ALREADY_OPEN;
+    }
 
     BOOL status = FALSE;
 
     if (serial.m_comNumber == 0)
+    {
+        LOG_ERROR("Camera must be detected before connection.");
         return TH_ERROR_DEVICE_NOT_DETECTED;
+    }
 
     // "\\\\.\\COM1" is Windows format
     sprintf(serial.m_comFileName, "\\\\.\\COM%d", serial.m_comNumber);
@@ -137,6 +143,7 @@ TH_ErrorCode usbSerialOpen(usbSerial_t& serial)
                                      NULL);                        // Null for Comm Devices
     if (serial.m_comHandler == INVALID_HANDLE_VALUE)
     {
+        LOG_ERROR("Windows cannot connect to the TrackHat port.");
         return TH_ERROR_DEVICE_COMUNICATION_FAILD;
     }
 
@@ -150,26 +157,30 @@ TH_ErrorCode usbSerialOpen(usbSerial_t& serial)
 
     if (SetCommTimeouts(serial.m_comHandler, &serial.m_timeouts) == FALSE)
     {
+        LOG_ERROR("Windows cannot setup port for the TrackHat connection.");
         return TH_ERROR_DEVICE_COMUNICATION_FAILD;
     }
 
-    serial.m_isPortOpened = true;
+    serial.m_isPortOpen = true;
     return TH_SUCCESS;
 }
 
 TH_ErrorCode usbSerialClose(usbSerial_t& serial)
 {
-    if (serial.m_isPortOpened)
+    if (serial.m_isPortOpen)
         CloseHandle(serial.m_comHandler);
 
-    serial.m_isPortOpened = false;
+    serial.m_isPortOpen = false;
     return TH_SUCCESS;
 }
 
 TH_ErrorCode usbSerialWrite(usbSerial_t& serial, const char* const buffer, uint32_t size)
 {
-    if (serial.m_isPortOpened == false)
+    if (serial.m_isPortOpen == false)
+    {
+        LOG_ERROR("Connection is not open.");
         return TH_ERROR_DEVICE_NOT_OPENED;
+    }
 
     DWORD writtenSize = 0;          // No of bytes written to the port
     BOOL status = FALSE;
@@ -180,13 +191,15 @@ TH_ErrorCode usbSerialWrite(usbSerial_t& serial, const char* const buffer, uint3
                        size,                // No of bytes to write into the port
                        &writtenSize,        // No of bytes written to the port
                        NULL);
-    if (size != static_cast<uint32_t>(writtenSize))
+    if (status==FALSE)
     {
+        LOG_ERROR("Cata cannot be transferred.");
         return TH_ERROR_DEVICE_COMUNICATION_FAILD;
     }
 
-    if (status==FALSE)
+    if (size != static_cast<uint32_t>(writtenSize))
     {
+        LOG_ERROR("Cannot transfer all data.");
         return TH_ERROR_DEVICE_COMUNICATION_FAILD;
     }
 
@@ -195,8 +208,11 @@ TH_ErrorCode usbSerialWrite(usbSerial_t& serial, const char* const buffer, uint3
 
 TH_ErrorCode usbSerialRead(usbSerial_t& serial, char* buffer, const uint32_t maxSize, uint32_t& readSizeOutput)
 {
-    if (serial.m_isPortOpened == false)
+    if (serial.m_isPortOpen==false)
+    {
+        LOG_ERROR("Connection is not open.");
         return TH_ERROR_DEVICE_NOT_OPENED;
+    }
 
     DWORD readSize = 0;     // No of bytes read from the port
     BOOL status = FALSE;
@@ -204,6 +220,7 @@ TH_ErrorCode usbSerialRead(usbSerial_t& serial, char* buffer, const uint32_t max
     status = ReadFile(serial.m_comHandler, buffer, maxSize, &readSize, NULL);
     if (status == FALSE)
     {
+        LOG_ERROR("Cannot receive data.");
         return TH_ERROR_DEVICE_COMUNICATION_FAILD;
     }
 
