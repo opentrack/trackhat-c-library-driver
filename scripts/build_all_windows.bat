@@ -102,10 +102,11 @@ msbuild ALL_BUILD.vcxproj /property:Configuration=%CONFIGURATION% /p:Platform="x
 if %errorlevel% neq 0 goto :showerror
 
 
-echo Signing binaries
+rem Signing binaries
 
 if %SIGN_SOFTWARE%==1 (
     if %DEBUG_BUILD%==0 (
+        echo Signing binaries
         call "%SIGN_SCRIPT%" "TrackHat" "%BUILD_DIR%\src\Release\track-hat.dll"
     ) else (
         echo Error: software signing is available only for Release.
@@ -115,10 +116,11 @@ if %SIGN_SOFTWARE%==1 (
 if %errorlevel% neq 0 goto :showerror
 
 
-echo Create installer
+rem Create installer
 
 if %CREATE_INSTALER%==1 (
     if %DEBUG_BUILD%==0 (
+        echo Create installer
         %INNOSETUP% %SCRIPTS_DIR%/installer.iss
     ) else (
         echo Error: creating installer is avalible only for Release.
@@ -128,11 +130,12 @@ if %CREATE_INSTALER%==1 (
 if %errorlevel% neq 0 goto :showerror
 
 
-echo Signing installer
+rem Signing installer
 
 if %SIGN_SOFTWARE%==1 (
     if %CREATE_INSTALER%==1 (
         if %DEBUG_BUILD%==0 (
+            echo Signing installer
             call "%SIGN_SCRIPT%" "TrackHat" "%BUILD_DIR%\installer\TrackHat-driver-installer-*.exe"
         ) else (
             echo Error: software signing is available only for Release.
