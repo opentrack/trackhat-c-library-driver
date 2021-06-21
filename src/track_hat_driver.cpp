@@ -11,7 +11,10 @@
 
 #include <cstdio>
 #include <string>
-#include <vector>
+
+
+//TODO to remove
+HANDLE testNewMessageEvent;
 
 
 void trackHat_EnableDebugMode()
@@ -41,6 +44,8 @@ TH_ErrorCode trackHat_Initialize(trackHat_Device_t* device)
 
     memset(device->m_pInternal, 0, sizeof(trackHat_Internal_t));
 
+    testNewMessageEvent = CreateEvent(0, true, 0, 0);
+
     return TH_SUCCESS;
 }
 
@@ -49,8 +54,11 @@ void trackHat_Deinitialize(trackHat_Device_t* device)
 {
     LOG_INFO("Structure deinitialization.");
 
-    if (device->m_pInternal!=nullptr)
+    if (device->m_pInternal != nullptr)
+    {
+        CloseHandle(testNewMessageEvent);
         free(device->m_pInternal);
+    }
     memset(device, 0, sizeof(trackHat_Device_t));
 }
 
@@ -90,8 +98,9 @@ TH_ErrorCode trackHat_Connect(trackHat_Device_t* device)
         return TH_ERROR_WRONG_PARAMETER;
     }
 
-    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
-    usbSerial_t& serial = internal.m_serial;
+    trackHat_Internal_t* internal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    trackHat_Receiver_t& receiver = internal->m_receiver;
+    usbSerial_t& serial = internal->m_serial;
 
     if (serial.m_comNumber == 0)
     {
@@ -103,6 +112,16 @@ TH_ErrorCode trackHat_Connect(trackHat_Device_t* device)
     if (result != TH_SUCCESS)
     {
         return result;
+    }
+
+    // Start receiving thread
+    receiver.m_runFlag = true;
+    receiver.m_threadHandler = CreateThread(0, 0, trackHat_receiverThreadFunction, internal, 0, &receiver.m_threadID);
+    if (receiver.m_threadHandler == nullptr)
+    {
+        LOG_ERROR("Cannot start rceiving. Error " << GetLastError() <<".");
+        trackHat_Disconnect(device);
+        return TH_ERROR_DEVICE_COMUNICATION_FAILD;
     }
 
     return TH_SUCCESS;
@@ -119,8 +138,19 @@ TH_ErrorCode trackHat_Disconnect(trackHat_Device_t* device)
         return TH_ERROR_WRONG_PARAMETER;
     }
 
-    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
-    usbSerial_t& serial = internal.m_serial;
+    trackHat_Internal_t* internal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    trackHat_Receiver_t& receiver = internal->m_receiver;
+    usbSerial_t& serial = internal->m_serial;
+
+    // Stop receiving thread
+    receiver.m_runFlag = false;
+    if (receiver.m_threadHandler != nullptr)
+    {
+        WaitForSingleObject(receiver.m_threadHandler, 10000);
+        CloseHandle(receiver.m_threadHandler);
+        receiver.m_threadHandler = nullptr;
+        receiver.m_threadID = 0;
+    }
 
     return UsbSerial::close(serial);
 }
@@ -176,3 +206,36 @@ TH_ErrorCode trackHat_UpdateInfo(trackHat_Device_t* device)
     return TH_SUCCESS;
 }
 
+DWORD WINAPI trackHat_receiverThreadFunction(LPVOID lpParameter)
+{
+    trackHat_Internal_t* internal = reinterpret_cast<trackHat_Internal_t*>(lpParameter);
+    trackHat_Receiver_t& receiver = internal->m_receiver;
+    usbSerial_t& serial = internal->m_serial;
+    TH_ErrorCode result = TH_SUCCESS;
+
+    std::vector<uint8_t> inputBuffer; // Input for data to parse
+    uint8_t rawBuffer[256];           // Buffer per iteration for serial data and parsed message
+    size_t readSize;
+    uint8_t newMessageId = 0;
+    bool newMessage = false;
+
+    inputBuffer.reserve(256);
+
+    LOG_INFO("Receiving started.");
+
+    while (receiver.m_runFlag)
+    {
+        result = UsbSerial::read(serial, rawBuffer, sizeof(rawBuffer), readSize);
+
+        if (!receiver.m_runFlag)
+            break;
+
+        if ((result==TH_SUCCESS) && (readSize>0))
+        {
+            inputBuffer.insert(inputBuffer.end(), rawBuffer, rawBuffer + readSize);
+        }
+    }
+
+    LOG_INFO("Receiving finished.");
+    return 0;
+}

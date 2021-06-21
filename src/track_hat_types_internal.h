@@ -13,10 +13,20 @@
 #define TRACK_HAT_USB_PRODUCT_ID     0x5740
 
 
+/* Structure for the data receiving thread. */
+typedef struct
+{
+    HANDLE  m_threadHandler;
+    DWORD   m_threadID;
+    bool    m_runFlag;
+} trackHat_Receiver_t;
+
+
 /* TrackHat device internal instance. */
 typedef struct
 {
-    usbSerial_t m_serial;
+    usbSerial_t         m_serial;
+    trackHat_Receiver_t m_receiver;
 } trackHat_Internal_t;
 
 
