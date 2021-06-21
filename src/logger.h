@@ -14,7 +14,7 @@ extern const char logInfoPrefix[];
 extern const char logErrorPrefix[];
 extern const char logFunctionBadUse[];
 
-
+/* Log Message with Prefix */
 #define LOG(M, P)                          \
     do {                                   \
         if (logger_IsDebugModeEnabled())   \

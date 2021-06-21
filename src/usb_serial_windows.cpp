@@ -116,7 +116,7 @@ uint16_t usbGetComPort(uint16_t vendorId, uint16_t productId)
 
 TH_ErrorCode usbSerialOpen(usbSerial_t& serial)
 {
-    if (serial.m_isPortOpened)
+    if (serial.m_isPortOpen)
     {
         LOG_ERROR("Cannot open a port that is already open.");
         return TH_ERROR_DEVICE_ALREADY_OPEN;
@@ -161,22 +161,22 @@ TH_ErrorCode usbSerialOpen(usbSerial_t& serial)
         return TH_ERROR_DEVICE_COMUNICATION_FAILD;
     }
 
-    serial.m_isPortOpened = true;
+    serial.m_isPortOpen = true;
     return TH_SUCCESS;
 }
 
 TH_ErrorCode usbSerialClose(usbSerial_t& serial)
 {
-    if (serial.m_isPortOpened)
+    if (serial.m_isPortOpen)
         CloseHandle(serial.m_comHandler);
 
-    serial.m_isPortOpened = false;
+    serial.m_isPortOpen = false;
     return TH_SUCCESS;
 }
 
 TH_ErrorCode usbSerialWrite(usbSerial_t& serial, const char* const buffer, uint32_t size)
 {
-    if (serial.m_isPortOpened == false)
+    if (serial.m_isPortOpen == false)
     {
         LOG_ERROR("Connection is not open.");
         return TH_ERROR_DEVICE_NOT_OPENED;
@@ -208,7 +208,7 @@ TH_ErrorCode usbSerialWrite(usbSerial_t& serial, const char* const buffer, uint3
 
 TH_ErrorCode usbSerialRead(usbSerial_t& serial, char* buffer, const uint32_t maxSize, uint32_t& readSizeOutput)
 {
-    if (serial.m_isPortOpened==false)
+    if (serial.m_isPortOpen==false)
     {
         LOG_ERROR("Connection is not open.");
         return TH_ERROR_DEVICE_NOT_OPENED;
