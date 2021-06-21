@@ -8,6 +8,9 @@
 #include <iostream>
 #include <Windows.h>
 
+/* Operate initialized and connected TrackHat camera */
+void operateTrackHatReadyForOperation(trackHat_Device_t* device);
+
 int main()
 {
     trackHat_Device_t device;
@@ -18,47 +21,55 @@ int main()
 
     // Intitialize structure
     result = trackHat_Initialize(&device);
-    if (TH_SUCCESS != result)
+    if (result == TH_SUCCESS)
+    {
+        // Detect device on USB port
+        result = trackHat_DetectDevice(&device);
+        if (result == TH_SUCCESS)
+        {
+            // Connect to device
+            result = trackHat_Connect(&device);
+            if (result == TH_SUCCESS)
+            {
+                // Camera is read to use
+                operateTrackHatReadyForOperation(&device);
+
+                // Disconnect from device
+                result = trackHat_Disconnect(&device);
+                if (result != TH_SUCCESS)
+                {
+                    printf("Device not detected. Error %d\n", result);
+                }
+            }
+            else
+            {
+                printf("Cannot connect to the device. Error %d\n", result);
+            }
+        }
+        else
+        {
+            printf("Device not detected. Error %d\n", result);
+        }
+
+        // Deintitialize structure
+        trackHat_Deinitialize(&device);
+    }
+    else
     {
         printf("Initializing filed. Error %d\n", result);
-        goto exit;
     }
 
-    // Detect device on USB port
-    result = trackHat_DetectDevice(&device);
-    if (TH_SUCCESS != result)
-    {
-        printf("Device not detected. Error %d\n", result);
-        goto deinitialize_exit;
-    }
-
-    // Connect to device
-    result = trackHat_Connect(&device);
-    if (TH_SUCCESS != result)
-    {
-        printf("Device not detected. Error %d\n", result);
-        goto deinitialize_exit;
-    }
-
-    // Update information about device
-    result = trackHat_UpdateInfo(&device);
-    if (TH_SUCCESS != result)
-    {
-        printf("Device not detected. Error %d\n", result);
-    }
-
-    // Disconnect from device
-    result = trackHat_Disconnect(&device);
-    if (TH_SUCCESS != result)
-    {
-        printf("Device not detected. Error %d\n", result);
-    }
-
-
-deinitialize_exit:
-    trackHat_Deinitialize(&device);
-
-exit:
     system("pause");
     return 0;
+}
+
+
+void operateTrackHatReadyForOperation(trackHat_Device_t* device)
+{
+    // Update information about device
+    TH_ErrorCode result = trackHat_UpdateInfo(device);
+    if (result != TH_SUCCESS)
+    {
+        printf("Can not update device info. Error %d\n", result);
+    }
 }
