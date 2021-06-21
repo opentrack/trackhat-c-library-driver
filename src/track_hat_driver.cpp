@@ -19,10 +19,12 @@ void trackHat_EnableDebugMode()
     logger_SetEnable(true);
 }
 
+
 void trackHat_DisableDebugMode()
 {
     logger_SetEnable(false);
 }
+
 
 TH_ErrorCode trackHat_Initialize(trackHat_Device_t* device)
 {
@@ -42,6 +44,7 @@ TH_ErrorCode trackHat_Initialize(trackHat_Device_t* device)
     return TH_SUCCESS;
 }
 
+
 void trackHat_Deinitialize(trackHat_Device_t* device)
 {
     LOG_INFO("Structure deinitialization.");
@@ -50,6 +53,7 @@ void trackHat_Deinitialize(trackHat_Device_t* device)
         free(device->m_pInternal);
     memset(device, 0, sizeof(trackHat_Device_t));
 }
+
 
 TH_ErrorCode trackHat_DetectDevice(trackHat_Device_t* device)
 {
@@ -63,7 +67,7 @@ TH_ErrorCode trackHat_DetectDevice(trackHat_Device_t* device)
 
     trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
     usbSerial_t& serial = internal.m_serial;
-    serial.m_comNumber = usbGetComPort(TRACK_HAT_USB_VENDOR_ID, TRACK_HAT_USB_PRODUCT_ID);
+    serial.m_comNumber = UsbSerial::getComPort(TRACK_HAT_USB_VENDOR_ID, TRACK_HAT_USB_PRODUCT_ID);
 
     if (serial.m_comNumber == 0)
     {
@@ -95,13 +99,19 @@ TH_ErrorCode trackHat_Connect(trackHat_Device_t* device)
         return TH_ERROR_DEVICE_NOT_DETECTED;
     }
 
-    return usbSerialOpen(serial);
+    TH_ErrorCode result = UsbSerial::open(serial);
+    if (result != TH_SUCCESS)
+    {
+        return result;
+    }
+
+    return TH_SUCCESS;
 }
 
 
 TH_ErrorCode trackHat_Disconnect(trackHat_Device_t* device)
 {
-    LOG_INFO("Disconnection.");
+    LOG_INFO("Disconnecting.");
 
     if ((device == nullptr) || (device->m_pInternal == nullptr))
     {
@@ -112,7 +122,7 @@ TH_ErrorCode trackHat_Disconnect(trackHat_Device_t* device)
     trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
     usbSerial_t& serial = internal.m_serial;
 
-    return usbSerialClose(serial);
+    return UsbSerial::close(serial);
 }
 
 
@@ -134,13 +144,13 @@ TH_ErrorCode trackHat_UpdateInfo(trackHat_Device_t* device)
 
     while (true)
     {
-        TH_ErrorCode result = usbSerialWrite(serial, serialOutput, sizeof(serialOutput));
+        TH_ErrorCode result = UsbSerial::write(serial, serialOutput, sizeof(serialOutput));
         if (result != TH_SUCCESS)
         {
             return result;
         }
 
-        result = usbSerialRead(serial, serialInput, sizeof(serialInput), readSize);
+        result = UsbSerial::read(serial, serialInput, sizeof(serialInput), readSize);
         if (result != TH_SUCCESS)
         {
             return result;
