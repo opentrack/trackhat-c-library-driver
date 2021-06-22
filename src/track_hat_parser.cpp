@@ -25,6 +25,15 @@ namespace Parser {
         return i;
     }
 
+    size_t createMessageGetDeviceInfo(uint8_t* message)
+    {
+        size_t i = 0;
+        message[i++] = MessageID::ID_GET_DEVICE_INFO;
+        message[i++] = transactionID++;
+        appednCRC(message, i);
+        return i;
+    }
+
     void parseMessageStatus(std::vector<uint8_t>& input, MessageStatus& status)
     {
         WaitForSingleObject(status.m_mutex, INFINITE);
@@ -39,6 +48,23 @@ namespace Parser {
 
         ReleaseMutex(status.m_mutex);
         SetEvent(status.m_newMessageEvent);
+    }
+
+    void parseMessageDeviceInfo(std::vector<uint8_t>& input, MessageDeviceInfo& deviceInfo)
+    {
+        WaitForSingleObject(deviceInfo.m_mutex, INFINITE);
+
+        deviceInfo.m_transactionID = input[1];
+        deviceInfo.m_hardwareVersion = input[2];
+        deviceInfo.m_softwareVersionMajor = input[3];
+        deviceInfo.m_softwareVersionMinor = input[4];
+        deviceInfo.m_serialNumber = static_cast<uint32_t>(input[5]) << 24 |
+                                    static_cast<uint32_t>(input[6]) << 16 |
+                                    static_cast<uint32_t>(input[7]) << 8 |
+                                    static_cast<uint32_t>(input[8]);
+
+        ReleaseMutex(deviceInfo.m_mutex);
+        SetEvent(deviceInfo.m_newMessageEvent);
     }
 
     void parseMessageACK(std::vector<uint8_t>& input, trackHat_Messages_t& messages)
@@ -70,6 +96,30 @@ namespace Parser {
                         else
                         {
                             LOG_ERROR("New Status message - wrong CRC.");
+                            input.erase(input.begin());
+                        }
+                    }
+                    else
+                    {
+                        // Not enough data. Finish parsing
+                        return;
+                    }
+                    break;
+                }
+
+                case MessageID::ID_DEVICE_INFO:
+                {
+                    if (input.size() >= MessageDeviceInfo::FrameSize)
+                    {
+                        if (checkCRC(input, MessageDeviceInfo::FrameSize))
+                        {
+                            LOG_INFO("New Device Info message.");
+                            parseMessageDeviceInfo(input, messages.m_deviceInfo);
+                            input.erase(input.begin(), input.begin() + MessageDeviceInfo::FrameSize);
+                        }
+                        else
+                        {
+                            LOG_ERROR("New Device Info message - wrong CRC.");
                             input.erase(input.begin());
                         }
                     }

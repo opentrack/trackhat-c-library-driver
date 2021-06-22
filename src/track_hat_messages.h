@@ -40,7 +40,7 @@ struct MessageProtect
 {
 protected:
     MessageProtect() :
-        m_newMessageEvent(CreateEvent(NULL, true, 0, NULL)),
+        m_newMessageEvent(CreateEvent(NULL, false, 0, NULL)),
         m_mutex(CreateMutex(NULL, false, NULL))
     { }
 

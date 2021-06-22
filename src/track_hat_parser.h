@@ -14,13 +14,23 @@
 namespace Parser {
 
     /**
-     * Create binary frame for GET_STATUS message .
+     * Create binary frame for GET_STATUS message.
      *
-     * \param[out]  message          Vector of the data to parse. The parsed data will be deleted.
+     * \param[in/out]  message       Buffer to set the frame.
      *
      * \return                       Size of the output message.
      */
     size_t createMessageGetStatus(uint8_t* message);
+
+
+    /**
+     * Create binary frame for GET_DEVICE_INFO message.
+     *
+     * \param[in/out]  message       Buffer to set the frame.
+     *
+     * \return                       Size of the output message.
+     */
+    size_t createMessageGetDeviceInfo(uint8_t* message);
 
 
     /**

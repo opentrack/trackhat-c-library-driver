@@ -122,7 +122,7 @@ TH_ErrorCode trackHat_Connect(trackHat_Device_t* device)
         return TH_ERROR_DEVICE_COMUNICATION_FAILD;
     }
 
-    return TH_SUCCESS;
+    return trackHat_UpdateInfo(device);
 }
 
 
@@ -160,13 +160,15 @@ TH_ErrorCode trackHat_UpdateInfo(trackHat_Device_t* device)
         return TH_ERROR_WRONG_PARAMETER;
 
     trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    MessageDeviceInfo& messageDeviceInfo = internal.m_messages.m_deviceInfo;
     MessageStatus& messageStatus = internal.m_messages.m_status;
     usbSerial_t& serial = internal.m_serial;
 
     uint8_t txMessage[MESSAGE_BUFFER_SIZE];
     size_t  txMessageSize = Parser::createMessageGetStatus(txMessage);
 
-    ResetEvent(messageStatus.m_newMessageEvent);
+    // Update Status
+
     TH_ErrorCode result = UsbSerial::write(serial, txMessage, txMessageSize);
     if (result != TH_SUCCESS)
     {
@@ -180,10 +182,31 @@ TH_ErrorCode trackHat_UpdateInfo(trackHat_Device_t* device)
     }
 
     WaitForSingleObject(messageStatus.m_mutex, INFINITE);
-
     device->m_isIdleMode = messageStatus.m_camMode == CameraMode::CAM_IDLE;
-
     ReleaseMutex(messageStatus.m_mutex);
+
+    // Update device info
+
+    txMessageSize = Parser::createMessageGetDeviceInfo(txMessage);
+
+    result = UsbSerial::write(serial, txMessage, txMessageSize);
+    if (result != TH_SUCCESS)
+    {
+        return result;
+    }
+
+    result = trackHat_waitForNewMessageEvent(messageDeviceInfo.m_newMessageEvent);
+    if (result != TH_SUCCESS)
+    {
+        return result;
+    }
+
+    WaitForSingleObject(messageDeviceInfo.m_mutex, INFINITE);
+    device->m_hardwareVersion = messageDeviceInfo.m_hardwareVersion;
+    device->m_softwareVersionMajor = messageDeviceInfo.m_softwareVersionMajor;
+    device->m_softwareVersionMinor = messageDeviceInfo.m_softwareVersionMinor;
+    device->m_serialNumber = messageDeviceInfo.m_serialNumber;
+    ReleaseMutex(messageDeviceInfo.m_mutex);
 
     return TH_SUCCESS;
 }
