@@ -107,6 +107,15 @@ namespace Parser {
     {
         while (input.size() > 0)
         {
+            // Validation of the frame :
+            // 1) ID ok, CRC ok = > parse rest of the frame
+            // 2) ID ok, CRC err = > leave the first byte; frames may be shifted
+            //    and ID  might be correct by accident (there is no frame separator
+            //    in the protocol)
+            // 3) ID ok, insufficient data for CRC = > skip parsing; it is possible
+            //    that not all data has been read or ID is wrong
+            // 4) ID err = > leave the first byte; frames may be shifted
+
             switch (input[0])
             {
                 case MessageID::ID_COORDINATE:
@@ -226,6 +235,13 @@ namespace Parser {
                         // Not enough data. Finish parsing
                         return;
                     }
+                    break;
+                }
+
+                default:
+                {
+                    LOG_ERROR("Unknown frame Id " << input[0] << ".");
+                    input.erase(input.begin());
                     break;
                 }
             }
