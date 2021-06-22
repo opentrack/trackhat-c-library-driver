@@ -212,6 +212,14 @@ TH_ErrorCode trackHat_UpdateInfo(trackHat_Device_t* device)
 }
 
 
+TH_ErrorCode trackHat_enableSendingCoordinates(usbSerial_t& serial, bool enable)
+{
+    uint8_t txMessage[MESSAGE_BUFFER_SIZE];
+    size_t  txMessageSize = Parser::createMessageSetMode(txMessage, enable);
+    return UsbSerial::write(serial, txMessage, txMessageSize);
+}
+
+
 DWORD WINAPI trackHat_receiverThreadFunction(LPVOID lpParameter)
 {
     trackHat_Internal_t* internal = reinterpret_cast<trackHat_Internal_t*>(lpParameter);

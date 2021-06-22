@@ -34,6 +34,17 @@ namespace Parser {
 
 
     /**
+     * Create binary frame for SET_MODE message.
+     *
+     * \param[in/out]  message       Buffer to set the frame.
+     * \param[in]      coordinates   0 - Idle Mode, 1 = Coordinates Mode
+     *
+     * \return                       Size of the output message.
+     */
+    size_t createMessageSetMode(uint8_t* message, bool coordinates);
+
+
+    /**
      * Parse binary data na conver it to TrackHat messages.
      *
      * \param[in/out] input        Vector of the data to parse. The parsed bytes are deleted.

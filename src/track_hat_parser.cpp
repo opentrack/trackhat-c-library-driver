@@ -34,6 +34,16 @@ namespace Parser {
         return i;
     }
 
+    size_t createMessageSetMode(uint8_t* message, bool coordinates)
+    {
+        size_t i = 0;
+        message[i++] = MessageID::ID_SET_MODE;
+        message[i++] = transactionID++;
+        message[i++] = static_cast<uint8_t>(coordinates);
+        appednCRC(message, i);
+        return i;
+    }
+
     void parseMessageStatus(std::vector<uint8_t>& input, MessageStatus& status)
     {
         WaitForSingleObject(status.m_mutex, INFINITE);
