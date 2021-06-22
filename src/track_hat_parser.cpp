@@ -67,14 +67,40 @@ namespace Parser {
         SetEvent(deviceInfo.m_newMessageEvent);
     }
 
+    void parseMessageCoordinates(std::vector<uint8_t>& input, MessageCoordinates& coordinates)
+    {
+        trackHat_Point_t* points = coordinates.m_points.m_point;
+        uint16_t value = 0;
+        size_t byte = 1;
+
+        WaitForSingleObject(coordinates.m_mutex, INFINITE);
+
+        for (size_t i = 0; i < TRACK_HAT_POINTS_NUMBER; i++)
+        {
+            value = input[byte++] << 8;
+            value = value | input[byte++];
+            points[i].m_x = value;
+
+            value = input[byte++] << 8;
+            value = value | input[byte++];
+            points[i].m_y = value;
+
+            points[i].m_brightness = input[byte++];
+        }
+
+        ReleaseMutex(coordinates.m_mutex);
+        SetEvent(coordinates.m_newMessageEvent);
+    }
+
     void parseMessageACK(std::vector<uint8_t>& input, trackHat_Messages_t& messages)
     {
         messages.m_lastACKTransactionId = input[1];
     }
 
-    void parseMessageNACK(std::vector<uint8_t>& input, trackHat_Messages_t& messages)
+    void parseMessageNACK(std::vector<uint8_t>& input, MessageNACK& nack)
     {
-        messages.m_lastNACKTransactionId = input[1];
+        nack.m_transactionID = input[1];
+        nack.m_reason = static_cast<NACKReason>(input[2]);
     }
 
     void parseInputData(std::vector<uint8_t>& input, trackHat_Messages_t& messages)
@@ -83,6 +109,30 @@ namespace Parser {
         {
             switch (input[0])
             {
+                case MessageID::ID_COORDINATE:
+                {
+                    if (input.size() >= MessageCoordinates::FrameSize)
+                    {
+                        if (checkCRC(input, MessageCoordinates::FrameSize))
+                        {
+                            //LOG_INFO("New Coordinates message.");
+                            parseMessageCoordinates(input, messages.m_coordinates);
+                            input.erase(input.begin(), input.begin() + MessageCoordinates::FrameSize);
+                        }
+                        else
+                        {
+                            LOG_ERROR("New Coordinates message - wrong CRC.");
+                            input.erase(input.begin());
+                        }
+                    }
+                    else
+                    {
+                        // Not enough data. Finish parsing
+                        return;
+                    }
+                    break;
+                }
+
                 case MessageID::ID_STATUS:
                 {
                     if (input.size() >= MessageStatus::FrameSize)
@@ -162,7 +212,7 @@ namespace Parser {
                         if (checkCRC(input, MessageNACK::FrameSize))
                         {
                             LOG_ERROR("NACK");
-                            parseMessageNACK(input, messages);
+                            parseMessageNACK(input, messages.m_nack);
                             input.erase(input.begin(), input.begin() + MessageNACK::FrameSize);
                         }
                         else
@@ -178,7 +228,6 @@ namespace Parser {
                     }
                     break;
                 }
-
             }
         }
     }

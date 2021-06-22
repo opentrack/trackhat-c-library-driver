@@ -22,16 +22,23 @@ enum MessageID : uint8_t
     ID_NACK            = 0xff
 };
 
-enum CameraStatus : uint8_t
+enum class CameraStatus : uint8_t
 {
     CAM_NOT_PRESENT = 0x00,
     CAM_PRESENT = 0x01,
 };
 
-enum CameraMode : uint8_t
+enum class CameraMode : uint8_t
 {
     CAM_IDLE = 0x00,
     CAM_COORDINATE = 0x01,
+};
+
+enum class NACKReason : uint8_t
+{
+    NACK_UNKNOWN = 0x00,
+    NACK_BUSY    = 0x01,
+    NACK_INVALID_REQUEST = 0x02,
 };
 
 
@@ -66,8 +73,8 @@ struct MessageStatus : public MessageBase, public MessageProtect
 {
     static const size_t FrameSize = 10;
 
-    CameraStatus m_camStatus = CAM_NOT_PRESENT;
-    CameraMode   m_camMode = CAM_IDLE;
+    CameraStatus m_camStatus = CameraStatus::CAM_NOT_PRESENT;
+    CameraMode   m_camMode = CameraMode::CAM_IDLE;
     uint32_t     m_uptimeInSec = 0;
 };
 
@@ -82,7 +89,7 @@ struct MessageDeviceInfo : public MessageBase, public MessageProtect
     uint32_t m_serialNumber;
 };
 
-struct MessageCoordinates : public MessageBase, public MessageProtect
+struct MessageCoordinates : public MessageProtect
 {
     static const size_t FrameSize = 83;
 
@@ -96,7 +103,9 @@ struct MessageACK : public MessageBase
 
 struct MessageNACK : public MessageBase
 {
-    static const size_t FrameSize = 4;
+    static const size_t FrameSize = 5;
+
+    NACKReason m_reason;
 };
 
 
