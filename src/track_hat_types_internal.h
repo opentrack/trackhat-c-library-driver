@@ -25,6 +25,8 @@ typedef struct
     MessageStatus      m_status;
     MessageDeviceInfo  m_deviceInfo;
     MessageCoordinates m_coordinateso;
+    uint8_t            m_lastACKTransactionId;
+    uint8_t            m_lastNACKTransactionId;
 } trackHat_Messages_t;
 
 

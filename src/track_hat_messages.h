@@ -89,12 +89,12 @@ struct MessageCoordinates : public MessageBase, public MessageProtect
     trackHat_Points_t m_points;
 };
 
-struct MessageAck : public MessageBase
+struct MessageACK : public MessageBase
 {
     static const size_t FrameSize = 4;
 };
 
-struct MessageNAck : public MessageBase
+struct MessageNACK : public MessageBase
 {
     static const size_t FrameSize = 4;
 };

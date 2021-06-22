@@ -41,6 +41,15 @@ namespace Parser {
         SetEvent(status.m_newMessageEvent);
     }
 
+    void parseMessageACK(std::vector<uint8_t>& input, trackHat_Messages_t& messages)
+    {
+        messages.m_lastACKTransactionId = input[1];
+    }
+
+    void parseMessageNACK(std::vector<uint8_t>& input, trackHat_Messages_t& messages)
+    {
+        messages.m_lastNACKTransactionId = input[1];
+    }
 
     void parseInputData(std::vector<uint8_t>& input, trackHat_Messages_t& messages)
     {
@@ -69,6 +78,55 @@ namespace Parser {
                         // Not enough data. Finish parsing
                         return;
                     }
+                    break;
+                }
+
+                case MessageID::ID_ACK:
+                {
+                    if (input.size() >= MessageACK::FrameSize)
+                    {
+                        if (checkCRC(input, MessageACK::FrameSize))
+                        {
+                            LOG_INFO("ACK");
+                            parseMessageACK(input, messages);
+                            input.erase(input.begin(), input.begin() + MessageACK::FrameSize);
+                        }
+                        else
+                        {
+                            LOG_ERROR("ACK - wrong CRC.");
+                            input.erase(input.begin());
+                        }
+                    }
+                    else
+                    {
+                        // Not enough data. Finish parsing
+                        return;
+                    }
+                    break;
+                }
+
+                case MessageID::ID_NACK:
+                {
+                    if (input.size() >= MessageNACK::FrameSize)
+                    {
+                        if (checkCRC(input, MessageNACK::FrameSize))
+                        {
+                            LOG_ERROR("NACK");
+                            parseMessageNACK(input, messages);
+                            input.erase(input.begin(), input.begin() + MessageNACK::FrameSize);
+                        }
+                        else
+                        {
+                            LOG_ERROR("NACK - wrong CRC.");
+                            input.erase(input.begin());
+                        }
+                    }
+                    else
+                    {
+                        // Not enough data. Finish parsing
+                        return;
+                    }
+                    break;
                 }
 
             }
