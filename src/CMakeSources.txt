@@ -2,6 +2,7 @@
 set(TRACK_HAT_DRIVER_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/logger.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/track_hat_driver.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/track_hat_parser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/usb_serial_windows.cpp)
 
 # Set headers for the library
