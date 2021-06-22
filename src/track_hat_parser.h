@@ -14,6 +14,26 @@
 namespace Parser {
 
     /**
+     * Create binary frame for GET_STATUS message .
+     *
+     * \param[out]  message          Vector of the data to parse. The parsed data will be deleted.
+     *
+     * \return                       Size of the output message.
+     */
+    size_t createMessageGetStatus(uint8_t* message);
+
+
+    /**
+     * Parse binary data na conver it to TrackHat messages.
+     *
+     * \param[in/out] input        Vector of the data to parse. The parsed bytes are deleted.
+     * \param[in/out] messages     Structure of 'trackHat_Messages_t' where parsed data wil be stored.
+     *
+     */
+    void parseInputData(std::vector<uint8_t>& input, trackHat_Messages_t& messages);
+
+
+    /**
     * Add CRC at the end of frame.
     *
     * \param[in/out]  buffer        Buffer to calculate CRC and append result value.
