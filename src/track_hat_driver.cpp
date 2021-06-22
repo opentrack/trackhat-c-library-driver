@@ -220,6 +220,38 @@ TH_ErrorCode trackHat_enableSendingCoordinates(usbSerial_t& serial, bool enable)
 }
 
 
+TH_ErrorCode trackHat_GetUptime(trackHat_Device_t* device, uint32_t* seconds)
+{
+    if ((device == nullptr) || (device->m_pInternal == nullptr))
+        return TH_ERROR_WRONG_PARAMETER;
+
+    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    MessageStatus& messageStatus = internal.m_messages.m_status;
+    usbSerial_t& serial = internal.m_serial;
+
+    uint8_t txMessage[MESSAGE_BUFFER_SIZE];
+    size_t  txMessageSize = Parser::createMessageGetStatus(txMessage);
+
+    // Update Status
+
+    TH_ErrorCode result = UsbSerial::write(serial, txMessage, txMessageSize);
+    if (result != TH_SUCCESS)
+    {
+        return result;
+    }
+
+    result = trackHat_waitForNewMessageEvent(messageStatus.m_newMessageEvent);
+    if (result != TH_SUCCESS)
+    {
+        return result;
+    }
+
+    *seconds = messageStatus.m_uptimeInSec;
+
+    return TH_SUCCESS;
+}
+
+
 DWORD WINAPI trackHat_receiverThreadFunction(LPVOID lpParameter)
 {
     trackHat_Internal_t* internal = reinterpret_cast<trackHat_Internal_t*>(lpParameter);
