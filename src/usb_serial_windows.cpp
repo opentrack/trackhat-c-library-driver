@@ -17,7 +17,8 @@
 #include <windows.h>
 #include <Setupapi.h>
 
-namespace UsbSerial {
+namespace UsbSerial
+{
 
     uint16_t getComPort(uint16_t vendorId, uint16_t productId)
     {

@@ -8,17 +8,23 @@
 
 #include "usb_serial.h"
 
-
+/* TrackHat camera USB IDs */
 #define TRACK_HAT_USB_VENDOR_ID      0x0483
 #define TRACK_HAT_USB_PRODUCT_ID     0x5740
+
+/* Maximum time for new message events in ms */
+#define MESSAGE_EVENT_TIMEOUT_MS  2000
+
+/* Size of the buffer for messages */
+#define MESSAGE_BUFFER_SIZE  256
 
 
 /* Structure for the data receiving thread. */
 typedef struct
 {
-    HANDLE  m_threadHandler;
+    HANDLE  m_threadHandler = NULL;
     DWORD   m_threadID;
-    bool    m_runFlag;
+    bool    m_isRunning = false;
 } trackHat_Receiver_t;
 
 

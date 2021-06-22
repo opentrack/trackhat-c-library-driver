@@ -11,10 +11,7 @@
 
 #include <cstdio>
 #include <string>
-
-
-//TODO to remove
-HANDLE testNewMessageEvent;
+#include <vector>
 
 
 void trackHat_EnableDebugMode()
@@ -44,8 +41,6 @@ TH_ErrorCode trackHat_Initialize(trackHat_Device_t* device)
 
     memset(device->m_pInternal, 0, sizeof(trackHat_Internal_t));
 
-    testNewMessageEvent = CreateEvent(0, true, 0, 0);
-
     return TH_SUCCESS;
 }
 
@@ -56,7 +51,6 @@ void trackHat_Deinitialize(trackHat_Device_t* device)
 
     if (device->m_pInternal != nullptr)
     {
-        CloseHandle(testNewMessageEvent);
         free(device->m_pInternal);
     }
     memset(device, 0, sizeof(trackHat_Device_t));
@@ -115,7 +109,7 @@ TH_ErrorCode trackHat_Connect(trackHat_Device_t* device)
     }
 
     // Start receiving thread
-    receiver.m_runFlag = true;
+    receiver.m_isRunning = true;
     receiver.m_threadHandler = CreateThread(0, 0, trackHat_receiverThreadFunction, internal, 0, &receiver.m_threadID);
     if (receiver.m_threadHandler == nullptr)
     {
@@ -143,10 +137,10 @@ TH_ErrorCode trackHat_Disconnect(trackHat_Device_t* device)
     usbSerial_t& serial = internal->m_serial;
 
     // Stop receiving thread
-    receiver.m_runFlag = false;
+    receiver.m_isRunning = false;
     if (receiver.m_threadHandler != nullptr)
     {
-        WaitForSingleObject(receiver.m_threadHandler, 10000);
+        WaitForSingleObject(receiver.m_threadHandler, MESSAGE_EVENT_TIMEOUT_MS);
         CloseHandle(receiver.m_threadHandler);
         receiver.m_threadHandler = nullptr;
         receiver.m_threadID = 0;
@@ -166,45 +160,18 @@ TH_ErrorCode trackHat_UpdateInfo(trackHat_Device_t* device)
     trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
     usbSerial_t& serial = internal.m_serial;
 
-    char serialOutput[] = { 0x01, 0x02, 0x03, 0x04 };
-    char serialInput[256];
-    uint32_t readSize = 0;
+    uint8_t txMessage[] = { 0x01, 0x02, 0x03, 0x04 };
+    size_t  txMessageSize = sizeof(txMessage);
 
-    std::vector<char> inputBuffer;
-
-    while (true)
+    TH_ErrorCode result = UsbSerial::write(serial, txMessage, txMessageSize);
+    if (result != TH_SUCCESS)
     {
-        TH_ErrorCode result = UsbSerial::write(serial, serialOutput, sizeof(serialOutput));
-        if (result != TH_SUCCESS)
-        {
-            return result;
-        }
-
-        result = UsbSerial::read(serial, serialInput, sizeof(serialInput), readSize);
-        if (result != TH_SUCCESS)
-        {
-            return result;
-        }
-
-        if (inputBuffer.size() < 100)
-        {
-            if (readSize > 1)
-            {
-                inputBuffer.insert(inputBuffer.end(), serialInput, serialInput + readSize);
-                printf("Buffer len %dn", inputBuffer.size());
-            }
-            else if (readSize == 1)
-            {
-                inputBuffer.push_back(serialInput[0]);
-                printf("Buffer len %d\n", inputBuffer.size());
-            }
-        }
-
-        Sleep(100);
+        return result;
     }
 
     return TH_SUCCESS;
 }
+
 
 DWORD WINAPI trackHat_receiverThreadFunction(LPVOID lpParameter)
 {
@@ -213,29 +180,46 @@ DWORD WINAPI trackHat_receiverThreadFunction(LPVOID lpParameter)
     usbSerial_t& serial = internal->m_serial;
     TH_ErrorCode result = TH_SUCCESS;
 
-    std::vector<uint8_t> inputBuffer; // Input for data to parse
-    uint8_t rawBuffer[256];           // Buffer per iteration for serial data and parsed message
+    std::vector<uint8_t> dataBuffer;           // data to parse
+    uint8_t serialBuffer[MESSAGE_BUFFER_SIZE]; // buffer for serial per iteration
     size_t readSize;
-    uint8_t newMessageId = 0;
-    bool newMessage = false;
 
-    inputBuffer.reserve(256);
+    dataBuffer.reserve(MESSAGE_BUFFER_SIZE);
 
     LOG_INFO("Receiving started.");
 
-    while (receiver.m_runFlag)
+    while (receiver.m_isRunning)
     {
-        result = UsbSerial::read(serial, rawBuffer, sizeof(rawBuffer), readSize);
+        result = UsbSerial::read(serial, serialBuffer, sizeof(serialBuffer), readSize);
 
-        if (!receiver.m_runFlag)
+        if (!receiver.m_isRunning)
             break;
 
         if ((result==TH_SUCCESS) && (readSize>0))
         {
-            inputBuffer.insert(inputBuffer.end(), rawBuffer, rawBuffer + readSize);
+            dataBuffer.insert(dataBuffer.end(), serialBuffer, serialBuffer + readSize);
         }
     }
 
     LOG_INFO("Receiving finished.");
     return 0;
+}
+
+TH_ErrorCode trackHat_waitForNewMessageEvent(HANDLE event)
+{
+    DWORD result = WaitForSingleObject(event, MESSAGE_EVENT_TIMEOUT_MS);
+    switch (result)
+    {
+        case WAIT_OBJECT_0:
+            LOG_INFO("Receiving event OK.");
+            return TH_SUCCESS;
+
+        case WAIT_TIMEOUT:
+            LOG_ERROR("Receiving event tiemout.");
+            return TH_ERROR_DEVICE_COMUNICATION_TIMEOUT;
+
+        default:
+            LOG_ERROR("Receiving event filed. Error " << GetLastError() << ".");
+            return TH_ERROR_DEVICE_COMUNICATION_FAILD;
+    }
 }

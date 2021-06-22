@@ -9,9 +9,6 @@
 
 #include "track_hat_types_internal.h"
 
-/* Maximum time for new message events in ms */
-#define MESSAGE_EVENT_TIMEOUT_MS  2000
-
 
 /* Dunction that runs on a separate thread for data received from the camera  */
 DWORD WINAPI trackHat_receiverThreadFunction(LPVOID lpParameter);
