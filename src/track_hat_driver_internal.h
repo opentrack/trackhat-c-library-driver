@@ -19,8 +19,16 @@ DWORD WINAPI trackHat_receiverThreadFunction(LPVOID lpParameter);
 TH_ErrorCode trackHat_waitForNewMessageEvent(HANDLE event);
 
 
+/* Update internal Status message */
+TH_ErrorCode trackHat_updateInternalStatus(trackHat_Device_t* device);
+
+
+/* Update internal DeviceInfo Message */
+TH_ErrorCode trackHat_updateInternalDeviceInfo(trackHat_Device_t* device);
+
+
 /* Start or stop sending coordinates from the TrackHat camera */
-TH_ErrorCode trackHat_enableSendingCoordinates(usbSerial_t& serial, bool enable);
+TH_ErrorCode trackHat_enableSendingCoordinates(trackHat_Device_t* device, bool enable);
 
 
 #endif //_TRACK_HAT_DRIVER_INTERNAL_H_

@@ -159,68 +159,19 @@ TH_ErrorCode trackHat_UpdateInfo(trackHat_Device_t* device)
     if ((device==nullptr) || (device->m_pInternal == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
 
-    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
-    MessageDeviceInfo& messageDeviceInfo = internal.m_messages.m_deviceInfo;
-    MessageStatus& messageStatus = internal.m_messages.m_status;
-    usbSerial_t& serial = internal.m_serial;
-
-    uint8_t txMessage[MESSAGE_TX_BUFFER_SIZE];
-    size_t  txMessageSize = Parser::createMessageGetStatus(txMessage);
-
-    // Update Status
-
-    TH_ErrorCode result = UsbSerial::write(serial, txMessage, txMessageSize);
-    if (result != TH_SUCCESS)
+    // Update DeviceInfo
+    TH_ErrorCode result = trackHat_updateInternalDeviceInfo(device);
+    if (result == TH_SUCCESS)
     {
-        return result;
+        // Update Status
+        result = trackHat_updateInternalStatus(device);
     }
 
-    result = trackHat_waitForNewMessageEvent(messageStatus.m_newMessageEvent);
-    if (result != TH_SUCCESS)
-    {
-        return result;
-    }
-
-    WaitForSingleObject(messageStatus.m_mutex, INFINITE);
-    device->m_isIdleMode = messageStatus.m_camMode == CameraMode::CAM_IDLE;
-    ReleaseMutex(messageStatus.m_mutex);
-
-    // Update device info
-
-    txMessageSize = Parser::createMessageGetDeviceInfo(txMessage);
-
-    result = UsbSerial::write(serial, txMessage, txMessageSize);
-    if (result != TH_SUCCESS)
-    {
-        return result;
-    }
-
-    result = trackHat_waitForNewMessageEvent(messageDeviceInfo.m_newMessageEvent);
-    if (result != TH_SUCCESS)
-    {
-        return result;
-    }
-
-    WaitForSingleObject(messageDeviceInfo.m_mutex, INFINITE);
-    device->m_hardwareVersion = messageDeviceInfo.m_hardwareVersion;
-    device->m_softwareVersionMajor = messageDeviceInfo.m_softwareVersionMajor;
-    device->m_softwareVersionMinor = messageDeviceInfo.m_softwareVersionMinor;
-    device->m_serialNumber = messageDeviceInfo.m_serialNumber;
-    ReleaseMutex(messageDeviceInfo.m_mutex);
-
-    return TH_SUCCESS;
+    return result;
 }
 
 
-TH_ErrorCode trackHat_enableSendingCoordinates(usbSerial_t& serial, bool enable)
-{
-    uint8_t txMessage[MESSAGE_TX_BUFFER_SIZE];
-    size_t  txMessageSize = Parser::createMessageSetMode(txMessage, enable);
-    return UsbSerial::write(serial, txMessage, txMessageSize);
-}
-
-
-TH_ErrorCode trackHat_GetUptime(trackHat_Device_t* device, uint32_t* seconds)
+TH_ErrorCode trackHat_updateInternalStatus(trackHat_Device_t* device)
 {
     if ((device == nullptr) || (device->m_pInternal == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
@@ -246,7 +197,102 @@ TH_ErrorCode trackHat_GetUptime(trackHat_Device_t* device, uint32_t* seconds)
         return result;
     }
 
-    *seconds = messageStatus.m_uptimeInSec;
+    WaitForSingleObject(messageStatus.m_mutex, INFINITE);
+    device->m_isIdleMode = messageStatus.m_camMode == CameraMode::CAM_IDLE;
+    ReleaseMutex(messageStatus.m_mutex);
+
+    return result;
+}
+
+
+TH_ErrorCode trackHat_updateInternalDeviceInfo(trackHat_Device_t* device)
+{
+    if ((device == nullptr) || (device->m_pInternal == nullptr))
+        return TH_ERROR_WRONG_PARAMETER;
+
+    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    MessageDeviceInfo& messageDeviceInfo = internal.m_messages.m_deviceInfo;
+    usbSerial_t& serial = internal.m_serial;
+
+    uint8_t txMessage[MESSAGE_TX_BUFFER_SIZE];
+    size_t txMessageSize = Parser::createMessageGetDeviceInfo(txMessage);
+
+    TH_ErrorCode result = UsbSerial::write(serial, txMessage, txMessageSize);
+    if (result != TH_SUCCESS)
+    {
+        return result;
+    }
+
+    result = trackHat_waitForNewMessageEvent(messageDeviceInfo.m_newMessageEvent);
+    if (result != TH_SUCCESS)
+    {
+        return result;
+    }
+
+    WaitForSingleObject(messageDeviceInfo.m_mutex, INFINITE);
+    device->m_hardwareVersion = messageDeviceInfo.m_hardwareVersion;
+    device->m_softwareVersionMajor = messageDeviceInfo.m_softwareVersionMajor;
+    device->m_softwareVersionMinor = messageDeviceInfo.m_softwareVersionMinor;
+    device->m_serialNumber = messageDeviceInfo.m_serialNumber;
+    ReleaseMutex(messageDeviceInfo.m_mutex);
+
+    return TH_SUCCESS;
+}
+
+
+TH_ErrorCode trackHat_enableSendingCoordinates(trackHat_Device_t* device, bool enable)
+{
+    if ((device == nullptr) || (device->m_pInternal == nullptr))
+        return TH_ERROR_WRONG_PARAMETER;
+
+    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    usbSerial_t& serial = internal.m_serial;
+
+    uint8_t txMessage[MESSAGE_TX_BUFFER_SIZE];
+    size_t  txMessageSize = Parser::createMessageSetMode(txMessage, enable);
+
+    TH_ErrorCode result = UsbSerial::write(serial, txMessage, txMessageSize);
+    if (result != TH_SUCCESS)
+    {
+        return result;
+    }
+
+    result = trackHat_updateInternalStatus(device);
+    if (result != TH_SUCCESS)
+    {
+        return result;
+    }
+
+    if ((enable && (device->m_isIdleMode == false)) ||
+        (!enable && (device->m_isIdleMode == true)))
+    {
+        LOG_INFO("Sending of coordinates " << (enable ? "enabled." : "disabled."));
+    }
+    else
+    {
+        LOG_ERROR("Setting the operation mode failed.");
+        result = TH_ERROR_DEVICE_COMUNICATION_FAILD;
+    }
+
+    return result;
+}
+
+
+TH_ErrorCode trackHat_GetUptime(trackHat_Device_t* device, uint32_t* seconds)
+{
+    if ((device == nullptr) || (device->m_pInternal == nullptr))
+        return TH_ERROR_WRONG_PARAMETER;
+
+    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+
+    // Update Status
+    TH_ErrorCode result = trackHat_updateInternalStatus(device);
+    if (result != TH_SUCCESS)
+    {
+        return result;
+    }
+
+    *seconds = internal.m_messages.m_status.m_uptimeInSec;
 
     return TH_SUCCESS;
 }
@@ -260,7 +306,7 @@ DWORD WINAPI trackHat_receiverThreadFunction(LPVOID lpParameter)
     usbSerial_t& serial = internal->m_serial;
     TH_ErrorCode result = TH_SUCCESS;
 
-    std::vector<uint8_t> dataBuffer;              // data to parse
+    std::vector<uint8_t> dataBuffer;           // data to parse
     uint8_t serialBuffer[MESSAGE_RX_BUFFER_SIZE]; // buffer for serial per iteration
     size_t readSize;
 
