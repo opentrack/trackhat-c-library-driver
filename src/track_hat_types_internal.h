@@ -16,8 +16,12 @@
 /* Maximum time for new message events in ms */
 #define MESSAGE_EVENT_TIMEOUT_MS  2000
 
-/* Size of the buffer for messages */
-#define MESSAGE_BUFFER_SIZE  256
+/* Size of the buffer for messages to transmit */
+#define MESSAGE_TX_BUFFER_SIZE  64
+
+/* Size of the buffer for messages to receive */
+#define MESSAGE_RX_BUFFER_SIZE  256
+
 
 /* Structure for the last messages received from the TrackHat camera. */
 typedef struct

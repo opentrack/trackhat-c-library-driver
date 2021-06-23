@@ -164,7 +164,7 @@ TH_ErrorCode trackHat_UpdateInfo(trackHat_Device_t* device)
     MessageStatus& messageStatus = internal.m_messages.m_status;
     usbSerial_t& serial = internal.m_serial;
 
-    uint8_t txMessage[MESSAGE_BUFFER_SIZE];
+    uint8_t txMessage[MESSAGE_TX_BUFFER_SIZE];
     size_t  txMessageSize = Parser::createMessageGetStatus(txMessage);
 
     // Update Status
@@ -214,7 +214,7 @@ TH_ErrorCode trackHat_UpdateInfo(trackHat_Device_t* device)
 
 TH_ErrorCode trackHat_enableSendingCoordinates(usbSerial_t& serial, bool enable)
 {
-    uint8_t txMessage[MESSAGE_BUFFER_SIZE];
+    uint8_t txMessage[MESSAGE_TX_BUFFER_SIZE];
     size_t  txMessageSize = Parser::createMessageSetMode(txMessage, enable);
     return UsbSerial::write(serial, txMessage, txMessageSize);
 }
@@ -229,7 +229,7 @@ TH_ErrorCode trackHat_GetUptime(trackHat_Device_t* device, uint32_t* seconds)
     MessageStatus& messageStatus = internal.m_messages.m_status;
     usbSerial_t& serial = internal.m_serial;
 
-    uint8_t txMessage[MESSAGE_BUFFER_SIZE];
+    uint8_t txMessage[MESSAGE_TX_BUFFER_SIZE];
     size_t  txMessageSize = Parser::createMessageGetStatus(txMessage);
 
     // Update Status
@@ -260,11 +260,11 @@ DWORD WINAPI trackHat_receiverThreadFunction(LPVOID lpParameter)
     usbSerial_t& serial = internal->m_serial;
     TH_ErrorCode result = TH_SUCCESS;
 
-    std::vector<uint8_t> dataBuffer;           // data to parse
-    uint8_t serialBuffer[MESSAGE_BUFFER_SIZE]; // buffer for serial per iteration
+    std::vector<uint8_t> dataBuffer;              // data to parse
+    uint8_t serialBuffer[MESSAGE_RX_BUFFER_SIZE]; // buffer for serial per iteration
     size_t readSize;
 
-    dataBuffer.reserve(MESSAGE_BUFFER_SIZE);
+    dataBuffer.reserve(MESSAGE_RX_BUFFER_SIZE);
 
     LOG_INFO("Receiving started.");
 
