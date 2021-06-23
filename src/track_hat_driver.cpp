@@ -198,8 +198,36 @@ TH_ErrorCode trackHat_updateInternalStatus(trackHat_Device_t* device)
     }
 
     WaitForSingleObject(messageStatus.m_mutex, INFINITE);
+    CameraStatus cameraStatus = messageStatus.m_camStatus;
     device->m_isIdleMode = messageStatus.m_camMode == CameraMode::CAM_IDLE;
     ReleaseMutex(messageStatus.m_mutex);
+
+    switch (cameraStatus)
+    {
+        case CameraStatus::CAM_PRESENT:
+            result = TH_SUCCESS;
+            break;
+
+        case CameraStatus::CAM_NOT_PRESENT:
+            LOG_ERROR("The camera in the TrackHad device does not work.");
+            result = TH_ERROR_CAMERA_INTERNAL_BROKEN;
+            break;
+
+        case CameraStatus::CAM_NOT_INITIALIZED:
+            LOG_ERROR("The camera in the TrackHat device does not want to start.");
+            result = TH_ERROR_CAMERA_INITIALIZING_FAILD;
+            break;
+
+        case CameraStatus::CAM_SELF_TEST_FAILD:
+            LOG_ERROR("The camera in the the TrackHad device does not work properly.");
+            result = TH_ERROR_CAMERA_SELFT_TEST_FAILD;
+            break;
+
+        default:
+            LOG_ERROR("Internal library fault.");
+            result = TH_ERROR_WRONG_PARAMETER;
+            break;
+    }
 
     return result;
 }

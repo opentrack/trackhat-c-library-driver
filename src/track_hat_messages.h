@@ -24,8 +24,10 @@ enum MessageID : uint8_t
 
 enum class CameraStatus : uint8_t
 {
-    CAM_NOT_PRESENT = 0x00,
-    CAM_PRESENT = 0x01,
+    CAM_NOT_PRESENT     = 0x00,
+    CAM_PRESENT         = 0x01,
+    CAM_NOT_INITIALIZED = 0x02,
+    CAM_SELF_TEST_FAILD = 0x03,
 };
 
 enum class CameraMode : uint8_t
@@ -73,7 +75,7 @@ struct MessageStatus : public MessageBase, public MessageProtect
 {
     static const size_t FrameSize = 10;
 
-    CameraStatus m_camStatus = CameraStatus::CAM_NOT_PRESENT;
+    CameraStatus m_camStatus = CameraStatus::CAM_NOT_INITIALIZED;
     CameraMode   m_camMode = CameraMode::CAM_IDLE;
     uint32_t     m_uptimeInSec = 0;
 };
