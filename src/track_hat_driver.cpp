@@ -334,10 +334,14 @@ DWORD WINAPI trackHat_receiverThreadFunction(LPVOID lpParameter)
     usbSerial_t& serial = internal->m_serial;
     TH_ErrorCode result = TH_SUCCESS;
 
-    std::vector<uint8_t> dataBuffer;           // data to parse
-    uint8_t serialBuffer[MESSAGE_RX_BUFFER_SIZE]; // buffer for serial per iteration
-    size_t readSize;
+    
+    // Buffer for serial per iteration MessageCoordinates::FrameSize size makes the USB
+    // return the data immediately after receiving the coordinate frame and not wait until
+    // the end of the timeout in case the buffer is large 
+    uint8_t serialBuffer[MessageCoordinates::FrameSize];
+    size_t readSize = 0;
 
+    std::vector<uint8_t> dataBuffer;   // data to parse
     dataBuffer.reserve(MESSAGE_RX_BUFFER_SIZE);
 
     LOG_INFO("Receiving started.");
@@ -378,4 +382,36 @@ TH_ErrorCode trackHat_waitForNewMessageEvent(HANDLE event)
             LOG_ERROR("Receiving event filed. Error " << GetLastError() << ".");
             return TH_ERROR_DEVICE_COMUNICATION_FAILD;
     }
+}
+
+
+TH_ErrorCode trackHat_GetDetectedPoints(trackHat_Device_t* device, trackHat_Points_t* points)
+{
+    if ((device == nullptr) || (device->m_pInternal == nullptr) || (points == nullptr))
+        return TH_ERROR_WRONG_PARAMETER;
+
+    trackHat_Internal_t* internal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    MessageCoordinates&  coordinates = internal->m_messages.m_coordinates;
+    TH_ErrorCode result = TH_ERROR_WRONG_PARAMETER;
+
+    if (device->m_isIdleMode)
+    {
+        result = trackHat_enableSendingCoordinates(device, true);
+        if (result != TH_SUCCESS)
+            return result;
+    }
+
+    result = trackHat_waitForNewMessageEvent(coordinates.m_newMessageEvent);
+
+    if (result != TH_SUCCESS)
+        return result;
+
+	//TODO: to remove
+    LOG_INFO("TakeEvent " << (int)coordinates.m_points.m_point[0].m_brightness);
+
+    WaitForSingleObject(coordinates.m_mutex, INFINITE);
+    memcpy(points, &coordinates.m_points, sizeof(trackHat_Points_t));
+    ReleaseMutex(coordinates.m_mutex);
+
+    return TH_SUCCESS;
 }

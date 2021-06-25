@@ -99,6 +99,8 @@ namespace Parser {
         }
 
         ReleaseMutex(coordinates.m_mutex);
+        //TODO: to remove
+        //LOG_INFO("SetEvent " << (int)points[0].m_brightness);
         SetEvent(coordinates.m_newMessageEvent);
     }
 
@@ -250,7 +252,9 @@ namespace Parser {
 
                 default:
                 {
-                    LOG_ERROR("Unknown frame Id " << input[0] << ".");
+                    char byte[8];
+                    sprintf(byte, "0x%02x", input[0]);
+                    LOG_ERROR("Unknown frame Id " << byte << ".");
                     input.erase(input.begin());
                     break;
                 }
