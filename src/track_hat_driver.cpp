@@ -250,7 +250,7 @@ TH_ErrorCode trackHat_updateInternalStatus(trackHat_Device_t* device)
         return result;
     }
 
-    result = trackHat_waitForNewMessageEvent(messageStatus.m_newMessageEvent);
+    result = trackHat_waitForNewMessageEvent(messageStatus.m_newMessageEvent, "Status message");
     if (result != TH_SUCCESS)
     {
         return result;
@@ -310,7 +310,7 @@ TH_ErrorCode trackHat_updateInternalDeviceInfo(trackHat_Device_t* device)
         return result;
     }
 
-    result = trackHat_waitForNewMessageEvent(messageDeviceInfo.m_newMessageEvent);
+    result = trackHat_waitForNewMessageEvent(messageDeviceInfo.m_newMessageEvent, "Device Info message");
     if (result != TH_SUCCESS)
     {
         return result;
@@ -497,21 +497,24 @@ void trackHat_callbackFunction(trackHat_PointsCallback_t callbackFunction, TH_Er
 }
 
 
-TH_ErrorCode trackHat_waitForNewMessageEvent(HANDLE event)
+TH_ErrorCode trackHat_waitForNewMessageEvent(HANDLE event, const char* eventName)
 {
+    if (eventName == nullptr)
+        eventName = "";
+
     DWORD result = WaitForSingleObject(event, MESSAGE_EVENT_TIMEOUT_MS);
     switch (result)
     {
         case WAIT_OBJECT_0:
-            //LOG_INFO("Receiving event OK.");
+            //LOG_INFO("Receiving event " << eventName << " OK.");
             return TH_SUCCESS;
 
         case WAIT_TIMEOUT:
-            LOG_ERROR("Receiving event tiemout.");
+            LOG_ERROR("Receiving event " << eventName << " tiemout.");
             return TH_ERROR_DEVICE_COMUNICATION_TIMEOUT;
 
         default:
-            LOG_ERROR("Receiving event filed. Error " << GetLastError() << ".");
+            LOG_ERROR("Receiving event " << eventName <<" filed. Error " << GetLastError() << ".");
             return TH_ERROR_DEVICE_COMUNICATION_FAILD;
     }
 }
@@ -526,7 +529,7 @@ TH_ErrorCode trackHat_GetDetectedPoints(trackHat_Device_t* device, trackHat_Poin
     MessageCoordinates&  coordinates = internal->m_messages.m_coordinates;
     TH_ErrorCode result = TH_ERROR_WRONG_PARAMETER;
 
-    result = trackHat_waitForNewMessageEvent(coordinates.m_newMessageEvent);
+    result = trackHat_waitForNewMessageEvent(coordinates.m_newMessageEvent, "Coordinates message");
 
     if (result != TH_SUCCESS)
         return result;

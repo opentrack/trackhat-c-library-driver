@@ -25,7 +25,7 @@ void trackHat_callbackFunction(trackHat_PointsCallback_t callbackFunction, TH_Er
 
 
 /* Handle the new message event */
-TH_ErrorCode trackHat_waitForNewMessageEvent(HANDLE event);
+TH_ErrorCode trackHat_waitForNewMessageEvent(HANDLE event, const char* eventName = nullptr);
 
 
 /* Update internal Status message */
