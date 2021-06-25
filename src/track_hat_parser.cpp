@@ -102,6 +102,7 @@ namespace Parser {
         //TODO: to remove
         //LOG_INFO("SetEvent " << (int)points[0].m_brightness);
         SetEvent(coordinates.m_newMessageEvent);
+        SetEvent(coordinates.m_newCallbackEvent);
     }
 
     void parseMessageACK(std::vector<uint8_t>& input, trackHat_Messages_t& messages)

@@ -93,9 +93,19 @@ struct MessageDeviceInfo : public MessageBase, public MessageProtect
 
 struct MessageCoordinates : public MessageProtect
 {
+    MessageCoordinates() :
+        m_newCallbackEvent(CreateEvent(NULL, false, 0, NULL))
+    { }
+
+    ~MessageCoordinates()
+    {
+        CloseHandle(m_newCallbackEvent);
+    }
+
     static const size_t FrameSize = 83;
 
     trackHat_Points_t m_points;
+    HANDLE m_newCallbackEvent;
 };
 
 struct MessageACK : public MessageBase

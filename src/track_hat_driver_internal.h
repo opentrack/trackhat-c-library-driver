@@ -11,8 +11,17 @@
 #include "usb_serial.h"
 
 
-/* Dunction that runs on a separate thread for data received from the camera  */
+/* Function that runs on a separate thread for data received from the camera */
 DWORD WINAPI trackHat_receiverThreadFunction(LPVOID lpParameter);
+
+
+/* Function that runs on a separate thread for callback system */
+DWORD WINAPI trackHat_callbackThreadFunction(LPVOID lpParameter);
+
+
+/* Run callback function with provided parameters */
+void trackHat_callbackFunction(trackHat_PointsCallback_t callbackFunction, TH_ErrorCode errorCode,
+                               const trackHat_Points_t* const points);
 
 
 /* Handle the new message event */
