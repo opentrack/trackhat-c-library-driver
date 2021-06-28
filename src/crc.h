@@ -16,7 +16,7 @@ uint16_t calculateCCITTCRC16(const T message, const size_t numberOfBytes)
     uint16_t MSB_IN_UNIT16 = 0x8000;
     for (size_t byte = 0; byte < numberOfBytes; ++byte)
     {
-        crcValue ^= (message[byte] << 8);
+        crcValue ^= (static_cast<uint16_t>(message[byte]) << 8);
         for (uint8_t bit = 8; bit > 0; --bit)
         {
             if (crcValue & MSB_IN_UNIT16)
