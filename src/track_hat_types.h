@@ -33,7 +33,7 @@ enum TH_ErrorCode
 };
 
 /* Maximum number of points detected by TrackHat camera. */
-#define TRACK_HAT_POINTS_NUMBER 16
+#define TRACK_HAT_NUMBER_OF_POINTS 16
 
 /* TrackHat device instance. */
 typedef struct
@@ -57,7 +57,7 @@ typedef struct
 /* TrackHat set of points. */
 typedef struct
 {
-    trackHat_Point_t m_point[TRACK_HAT_POINTS_NUMBER];
+    trackHat_Point_t m_point[TRACK_HAT_NUMBER_OF_POINTS];
 } trackHat_Points_t;
 
 /**

@@ -85,7 +85,7 @@ namespace Parser {
 
         WaitForSingleObject(coordinates.m_mutex, INFINITE);
 
-        for (size_t i = 0; i < TRACK_HAT_POINTS_NUMBER; i++)
+        for (size_t i = 0; i < TRACK_HAT_NUMBER_OF_POINTS; i++)
         {
             value = input[byte++] << 8;
             value = value | input[byte++];
@@ -259,17 +259,19 @@ namespace Parser {
     }
 
 
-    void appednCRC(uint8_t* message, size_t& intex)
+    void appednCRC(uint8_t* message, size_t& index)
     {
-        uint16_t crc = calculateCCITTCRC16(message, intex);
-        message[intex++] = crc >> 8;
-        message[intex++] = crc & 0xff;
+        uint16_t crc = calculateCCITTCRC16(message, index);
+        message[index++] = crc >> 8;
+        message[index++] = crc & 0xff;
     }
 
     bool checkCRC(std::vector<uint8_t>& buffer, size_t size)
     {
+        // Get CRC from the last two bytes
         uint16_t crc1 = static_cast<uint16_t>(buffer[size - 2]) << 8 |
                         static_cast<uint16_t>(buffer[size - 1]);
+        // Calculate CRC without last two bytes
         uint16_t crc2 = calculateCCITTCRC16(buffer, size - 2);
         return crc1 == crc2;
     }

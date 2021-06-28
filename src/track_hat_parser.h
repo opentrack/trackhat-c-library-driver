@@ -61,7 +61,7 @@ namespace Parser {
     * \param[in/out]  intex         Size of current bytes in the message. It is increased after add
     *                               CRC at the end.
     */
-    void appednCRC(uint8_t* buffer, size_t& intex);
+    void appednCRC(uint8_t* buffer, size_t& index);
 
 
     /**
