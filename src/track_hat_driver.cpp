@@ -7,6 +7,7 @@
 #include "track_hat_driver_internal.h"
 
 #include "logger.h"
+#include "track_hat_parser.h"
 #include "usb_serial.h"
 
 #include <cstdio>
@@ -32,14 +33,12 @@ TH_ErrorCode trackHat_Initialize(trackHat_Device_t* device)
 
     memset(device, 0, sizeof(trackHat_Device_t));
 
-    device->m_pInternal = malloc(sizeof(trackHat_Internal_t));
+    device->m_pInternal = new trackHat_Internal_t();
     if (device->m_pInternal == nullptr)
     {
         LOG_ERROR("Lack of memory.");
         return TH_MEMORY_ALLOCATION_FIELD;
     }
-
-    memset(device->m_pInternal, 0, sizeof(trackHat_Internal_t));
 
     return TH_SUCCESS;
 }
@@ -51,7 +50,12 @@ void trackHat_Deinitialize(trackHat_Device_t* device)
 
     if (device->m_pInternal != nullptr)
     {
-        free(device->m_pInternal);
+        trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+        if (internal.m_receiver.m_threadHandler != nullptr)
+        {
+            trackHat_Disconnect(device);
+        }
+        delete device->m_pInternal;
     }
     memset(device, 0, sizeof(trackHat_Device_t));
 }
@@ -118,7 +122,7 @@ TH_ErrorCode trackHat_Connect(trackHat_Device_t* device)
         return TH_ERROR_DEVICE_COMUNICATION_FAILD;
     }
 
-    return TH_SUCCESS;
+    return trackHat_UpdateInfo(device);
 }
 
 
@@ -152,16 +156,18 @@ TH_ErrorCode trackHat_Disconnect(trackHat_Device_t* device)
 
 TH_ErrorCode trackHat_UpdateInfo(trackHat_Device_t* device)
 {
-    //TODO this function will be reimplemented
-
     if ((device==nullptr) || (device->m_pInternal == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
 
     trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    MessageDeviceInfo& messageDeviceInfo = internal.m_messages.m_deviceInfo;
+    MessageStatus& messageStatus = internal.m_messages.m_status;
     usbSerial_t& serial = internal.m_serial;
 
-    uint8_t txMessage[] = { 0x01, 0x02, 0x03, 0x04 };
-    size_t  txMessageSize = sizeof(txMessage);
+    uint8_t txMessage[MESSAGE_BUFFER_SIZE];
+    size_t  txMessageSize = Parser::createMessageGetStatus(txMessage);
+
+    // Update Status
 
     TH_ErrorCode result = UsbSerial::write(serial, txMessage, txMessageSize);
     if (result != TH_SUCCESS)
@@ -169,7 +175,48 @@ TH_ErrorCode trackHat_UpdateInfo(trackHat_Device_t* device)
         return result;
     }
 
+    result = trackHat_waitForNewMessageEvent(messageStatus.m_newMessageEvent);
+    if (result != TH_SUCCESS)
+    {
+        return result;
+    }
+
+    WaitForSingleObject(messageStatus.m_mutex, INFINITE);
+    device->m_isIdleMode = messageStatus.m_camMode == CameraMode::CAM_IDLE;
+    ReleaseMutex(messageStatus.m_mutex);
+
+    // Update device info
+
+    txMessageSize = Parser::createMessageGetDeviceInfo(txMessage);
+
+    result = UsbSerial::write(serial, txMessage, txMessageSize);
+    if (result != TH_SUCCESS)
+    {
+        return result;
+    }
+
+    result = trackHat_waitForNewMessageEvent(messageDeviceInfo.m_newMessageEvent);
+    if (result != TH_SUCCESS)
+    {
+        return result;
+    }
+
+    WaitForSingleObject(messageDeviceInfo.m_mutex, INFINITE);
+    device->m_hardwareVersion = messageDeviceInfo.m_hardwareVersion;
+    device->m_softwareVersionMajor = messageDeviceInfo.m_softwareVersionMajor;
+    device->m_softwareVersionMinor = messageDeviceInfo.m_softwareVersionMinor;
+    device->m_serialNumber = messageDeviceInfo.m_serialNumber;
+    ReleaseMutex(messageDeviceInfo.m_mutex);
+
     return TH_SUCCESS;
+}
+
+
+TH_ErrorCode trackHat_enableSendingCoordinates(usbSerial_t& serial, bool enable)
+{
+    uint8_t txMessage[MESSAGE_BUFFER_SIZE];
+    size_t  txMessageSize = Parser::createMessageSetMode(txMessage, enable);
+    return UsbSerial::write(serial, txMessage, txMessageSize);
 }
 
 
@@ -177,6 +224,7 @@ DWORD WINAPI trackHat_receiverThreadFunction(LPVOID lpParameter)
 {
     trackHat_Internal_t* internal = reinterpret_cast<trackHat_Internal_t*>(lpParameter);
     trackHat_Receiver_t& receiver = internal->m_receiver;
+    trackHat_Messages_t& messages = internal->m_messages;
     usbSerial_t& serial = internal->m_serial;
     TH_ErrorCode result = TH_SUCCESS;
 
@@ -198,6 +246,8 @@ DWORD WINAPI trackHat_receiverThreadFunction(LPVOID lpParameter)
         if ((result==TH_SUCCESS) && (readSize>0))
         {
             dataBuffer.insert(dataBuffer.end(), serialBuffer, serialBuffer + readSize);
+
+            Parser::parseInputData(dataBuffer, messages);
         }
     }
 

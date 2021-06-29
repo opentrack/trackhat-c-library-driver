@@ -6,6 +6,7 @@
 #ifndef _TRACK_HAT_TYPES_INTERNAL_H_
 #define _TRACK_HAT_TYPES_INTERNAL_H_
 
+#include "track_hat_messages.h"
 #include "usb_serial.h"
 
 /* TrackHat camera USB IDs */
@@ -17,6 +18,16 @@
 
 /* Size of the buffer for messages */
 #define MESSAGE_BUFFER_SIZE  256
+
+/* Structure for the last messages received from the TrackHat camera. */
+typedef struct
+{
+    MessageStatus      m_status;
+    MessageDeviceInfo  m_deviceInfo;
+    MessageCoordinates m_coordinates;
+    MessageNACK        m_nack;
+    uint8_t            m_lastACKTransactionId;
+} trackHat_Messages_t;
 
 
 /* Structure for the data receiving thread. */
@@ -33,6 +44,7 @@ typedef struct
 {
     usbSerial_t         m_serial;
     trackHat_Receiver_t m_receiver;
+    trackHat_Messages_t m_messages;
 } trackHat_Internal_t;
 
 
