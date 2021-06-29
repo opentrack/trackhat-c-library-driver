@@ -121,7 +121,7 @@ TH_ErrorCode trackHat_Connect(trackHat_Device_t* device)
 
     // Start receiving thread
     receiverThread.m_isRunning = true;
-    receiverThread.m_threadHandler = CreateThread(0, 0, trackHat_receiverThreadFunction, internal, 0, &receiverThread.m_threadID);
+    receiverThread.m_threadHandler = CreateThread(0, 0, trackHat_ReceiverThreadFunction, internal, 0, &receiverThread.m_threadID);
     if (receiverThread.m_threadHandler == nullptr)
     {
         LOG_ERROR("Cannot start rceiving. Error " << GetLastError() <<".");
@@ -131,7 +131,7 @@ TH_ErrorCode trackHat_Connect(trackHat_Device_t* device)
 
     // Start callback thread
     callbackThread.m_isRunning = true;
-    callbackThread.m_threadHandler = CreateThread(0, 0, trackHat_callbackThreadFunction, internal, 0, &callbackThread.m_threadID);
+    callbackThread.m_threadHandler = CreateThread(0, 0, trackHat_CallbackThreadFunction, internal, 0, &callbackThread.m_threadID);
     if (callbackThread.m_threadHandler == nullptr)
     {
         LOG_ERROR("Cannot start callback system. Error " << GetLastError() << ".");
@@ -149,7 +149,7 @@ TH_ErrorCode trackHat_Connect(trackHat_Device_t* device)
     }
 
     // Disable Idle mode
-    result = trackHat_enableSendingCoordinates(device, true);
+    result = trackHat_EnableSendingCoordinates(device, true);
     if (result != TH_SUCCESS)
     {
         trackHat_Disconnect(device);
@@ -181,7 +181,7 @@ TH_ErrorCode trackHat_Disconnect(trackHat_Device_t* device)
         return TH_ERROR_DEVICE_NOT_OPEN;
     }
 
-    trackHat_enableSendingCoordinates(device, false);
+    trackHat_EnableSendingCoordinates(device, false);
 
     // Stop receiving thread
     receiverThread.m_isRunning = false;
@@ -219,18 +219,18 @@ TH_ErrorCode trackHat_UpdateInfo(trackHat_Device_t* device)
         return TH_ERROR_WRONG_PARAMETER;
 
     // Update DeviceInfo
-    TH_ErrorCode result = trackHat_updateInternalDeviceInfo(device);
+    TH_ErrorCode result = trackHat_UpdateInternalDeviceInfo(device);
     if (result == TH_SUCCESS)
     {
         // Update Status
-        result = trackHat_updateInternalStatus(device);
+        result = trackHat_UpdateInternalStatus(device);
     }
 
     return result;
 }
 
 
-TH_ErrorCode trackHat_updateInternalStatus(trackHat_Device_t* device)
+TH_ErrorCode trackHat_UpdateInternalStatus(trackHat_Device_t* device)
 {
     if ((device == nullptr) || (device->m_pInternal == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
@@ -250,7 +250,7 @@ TH_ErrorCode trackHat_updateInternalStatus(trackHat_Device_t* device)
         return result;
     }
 
-    result = trackHat_waitForNewMessageEvent(messageStatus.m_newMessageEvent, "Status message");
+    result = trackHat_WaitForNewMessageEvent(messageStatus.m_newMessageEvent, "Status message");
     if (result != TH_SUCCESS)
     {
         return result;
@@ -292,7 +292,7 @@ TH_ErrorCode trackHat_updateInternalStatus(trackHat_Device_t* device)
 }
 
 
-TH_ErrorCode trackHat_updateInternalDeviceInfo(trackHat_Device_t* device)
+TH_ErrorCode trackHat_UpdateInternalDeviceInfo(trackHat_Device_t* device)
 {
     if ((device == nullptr) || (device->m_pInternal == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
@@ -310,7 +310,7 @@ TH_ErrorCode trackHat_updateInternalDeviceInfo(trackHat_Device_t* device)
         return result;
     }
 
-    result = trackHat_waitForNewMessageEvent(messageDeviceInfo.m_newMessageEvent, "Device Info message");
+    result = trackHat_WaitForNewMessageEvent(messageDeviceInfo.m_newMessageEvent, "Device Info message");
     if (result != TH_SUCCESS)
     {
         return result;
@@ -327,7 +327,7 @@ TH_ErrorCode trackHat_updateInternalDeviceInfo(trackHat_Device_t* device)
 }
 
 
-TH_ErrorCode trackHat_enableSendingCoordinates(trackHat_Device_t* device, bool enable)
+TH_ErrorCode trackHat_EnableSendingCoordinates(trackHat_Device_t* device, bool enable)
 {
     if ((device == nullptr) || (device->m_pInternal == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
@@ -346,7 +346,7 @@ TH_ErrorCode trackHat_enableSendingCoordinates(trackHat_Device_t* device, bool e
         return result;
     }
 
-    result = trackHat_updateInternalStatus(device);
+    result = trackHat_UpdateInternalStatus(device);
     if (result != TH_SUCCESS)
     {
         return result;
@@ -371,7 +371,7 @@ TH_ErrorCode trackHat_GetUptime(trackHat_Device_t* device, uint32_t* seconds)
     trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
 
     // Update Status
-    TH_ErrorCode result = trackHat_updateInternalStatus(device);
+    TH_ErrorCode result = trackHat_UpdateInternalStatus(device);
     if (result != TH_SUCCESS)
     {
         return result;
@@ -383,7 +383,7 @@ TH_ErrorCode trackHat_GetUptime(trackHat_Device_t* device, uint32_t* seconds)
 }
 
 
-DWORD WINAPI trackHat_receiverThreadFunction(LPVOID lpParameter)
+DWORD WINAPI trackHat_ReceiverThreadFunction(LPVOID lpParameter)
 {
     trackHat_Internal_t* internal = reinterpret_cast<trackHat_Internal_t*>(lpParameter);
     trackHat_Thread_t& receiver = internal->m_receiver;
@@ -423,7 +423,7 @@ DWORD WINAPI trackHat_receiverThreadFunction(LPVOID lpParameter)
 }
 
 
-DWORD WINAPI trackHat_callbackThreadFunction(LPVOID lpParameter)
+DWORD WINAPI trackHat_CallbackThreadFunction(LPVOID lpParameter)
 {
     trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(lpParameter);
     trackHat_Callback_t& callback = internal.m_callback;
@@ -451,7 +451,7 @@ DWORD WINAPI trackHat_callbackThreadFunction(LPVOID lpParameter)
                 memcpy(&points, &coordinates.m_points, sizeof(trackHat_Points_t));
                 ReleaseMutex(coordinates.m_mutex);
 
-                trackHat_callbackFunction(callback.m_function, TH_SUCCESS, &points);
+                trackHat_CallbackFunction(callback.m_function, TH_SUCCESS, &points);
             }
             else
             {
@@ -465,13 +465,13 @@ DWORD WINAPI trackHat_callbackThreadFunction(LPVOID lpParameter)
                     if (result == WAIT_TIMEOUT)
                     {
                         if (internal.m_isOpen)
-                            trackHat_callbackFunction(callback.m_function, TH_ERROR_DEVICE_COMUNICATION_TIMEOUT, nullptr);
+                            trackHat_CallbackFunction(callback.m_function, TH_ERROR_DEVICE_COMUNICATION_TIMEOUT, nullptr);
                         else
-                            trackHat_callbackFunction(callback.m_function, TH_ERROR_DEVICE_NOT_OPEN, nullptr);
+                            trackHat_CallbackFunction(callback.m_function, TH_ERROR_DEVICE_NOT_OPEN, nullptr);
                     }
                     else
                     {
-                        trackHat_callbackFunction(callback.m_function, TH_ERROR_WRONG_PARAMETER, nullptr);
+                        trackHat_CallbackFunction(callback.m_function, TH_ERROR_WRONG_PARAMETER, nullptr);
                     }
                 }
             }
@@ -484,7 +484,7 @@ DWORD WINAPI trackHat_callbackThreadFunction(LPVOID lpParameter)
 }
 
 
-void trackHat_callbackFunction(trackHat_PointsCallback_t callbackFunction, TH_ErrorCode errorCode, const trackHat_Points_t* const points)
+void trackHat_CallbackFunction(trackHat_PointsCallback_t callbackFunction, TH_ErrorCode errorCode, const trackHat_Points_t* const points)
 {
     try
     {
@@ -497,7 +497,7 @@ void trackHat_callbackFunction(trackHat_PointsCallback_t callbackFunction, TH_Er
 }
 
 
-TH_ErrorCode trackHat_waitForNewMessageEvent(HANDLE event, const char* eventName)
+TH_ErrorCode trackHat_WaitForNewMessageEvent(HANDLE event, const char* eventName)
 {
     if (eventName == nullptr)
         eventName = "";
@@ -529,13 +529,10 @@ TH_ErrorCode trackHat_GetDetectedPoints(trackHat_Device_t* device, trackHat_Poin
     MessageCoordinates&  coordinates = internal->m_messages.m_coordinates;
     TH_ErrorCode result = TH_ERROR_WRONG_PARAMETER;
 
-    result = trackHat_waitForNewMessageEvent(coordinates.m_newMessageEvent, "Coordinates message");
+    result = trackHat_WaitForNewMessageEvent(coordinates.m_newMessageEvent, "Coordinates message");
 
     if (result != TH_SUCCESS)
         return result;
-
-	//TODO: to remove
-    //LOG_INFO("TakeEvent " << (int)coordinates.m_points.m_point[0].m_brightness);
 
     WaitForSingleObject(coordinates.m_mutex, INFINITE);
     memcpy(points, &coordinates.m_points, sizeof(trackHat_Points_t));

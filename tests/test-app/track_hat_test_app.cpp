@@ -73,7 +73,6 @@ void printTrackHatInfo(trackHat_Device_t* device)
         uint32_t uptimeSec = 0;
         TH_ErrorCode result = trackHat_GetUptime(device, &uptimeSec);
 
-        uptimeSec = 60 * 60 + 61;
         uint32_t seconds = uptimeSec % 60;
         uint32_t minutes = uptimeSec / 60;
         uint32_t hours =   minutes / 60;
