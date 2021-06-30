@@ -150,7 +150,6 @@ namespace UsbSerial
         }
 
         //Setting Timeouts
-        //TODO check timouts
         serial.m_timeouts.ReadIntervalTimeout = 50;
         serial.m_timeouts.ReadTotalTimeoutConstant = 50;
         serial.m_timeouts.ReadTotalTimeoutMultiplier = 1;
@@ -181,7 +180,7 @@ namespace UsbSerial
         if (serial.m_isPortOpen == false)
         {
             LOG_ERROR("Connection is not open.");
-            return TH_ERROR_DEVICE_NOT_OPENED;
+            return TH_ERROR_DEVICE_NOT_OPEN;
         }
 
         DWORD writtenSize = 0;          // No of bytes written to the port
@@ -195,7 +194,7 @@ namespace UsbSerial
                            NULL);
         if (status == FALSE)
         {
-            LOG_ERROR("Cata cannot be transferred.");
+            LOG_ERROR("Data cannot be transferred.");
             return TH_ERROR_DEVICE_COMUNICATION_FAILD;
         }
 
@@ -213,7 +212,7 @@ namespace UsbSerial
         if (serial.m_isPortOpen == false)
         {
             LOG_ERROR("Connection is not open.");
-            return TH_ERROR_DEVICE_NOT_OPENED;
+            return TH_ERROR_DEVICE_NOT_OPEN;
         }
 
         DWORD readSize = 0;     // No of bytes read from the port

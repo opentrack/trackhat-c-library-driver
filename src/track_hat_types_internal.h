@@ -16,8 +16,12 @@
 /* Maximum time for new message events in ms */
 #define MESSAGE_EVENT_TIMEOUT_MS  2000
 
-/* Size of the buffer for messages */
-#define MESSAGE_BUFFER_SIZE  256
+/* Size of the buffer for messages to transmit */
+#define MESSAGE_TX_BUFFER_SIZE  64
+
+/* Size of the buffer for messages to receive */
+#define MESSAGE_RX_BUFFER_SIZE  256
+
 
 /* Structure for the last messages received from the TrackHat camera. */
 typedef struct
@@ -36,16 +40,28 @@ typedef struct
     HANDLE  m_threadHandler = NULL;
     DWORD   m_threadID;
     bool    m_isRunning = false;
-} trackHat_Receiver_t;
+} trackHat_Thread_t;
+
+
+/* Structure for the callback receiving thread. */
+typedef struct
+{
+    trackHat_Thread_t m_thread;
+    trackHat_PointsCallback_t m_function = nullptr;
+    HANDLE m_mutex = nullptr;
+} trackHat_Callback_t;
 
 
 /* TrackHat device internal instance. */
 typedef struct
 {
     usbSerial_t         m_serial;
-    trackHat_Receiver_t m_receiver;
+    trackHat_Thread_t   m_receiver;
+    trackHat_Callback_t m_callback;
     trackHat_Messages_t m_messages;
+    bool m_isOpen = false;
 } trackHat_Internal_t;
 
 
 #endif //_TRACK_HAT_TYPES_INTERNAL_H_
+

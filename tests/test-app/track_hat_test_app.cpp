@@ -8,8 +8,11 @@
 #include <iostream>
 #include <Windows.h>
 
-/* Operate initialized and connected TrackHat camera */
-void operateTrackHatReadyForOperation(trackHat_Device_t* device);
+/* Operate the TrackHat camera after initializ and connect */
+void operateTrackHat(trackHat_Device_t* device);
+
+/* Operate the TrackHat camera after initializ and connect */
+void printTrackHatInfo(trackHat_Device_t* device);
 
 int main()
 {
@@ -31,8 +34,8 @@ int main()
             result = trackHat_Connect(&device);
             if (result == TH_SUCCESS)
             {
-                // Camera is read to use
-                operateTrackHatReadyForOperation(&device);
+                // Camera is ready to use
+                operateTrackHat(&device);
 
                 // Disconnect from device
                 result = trackHat_Disconnect(&device);
@@ -63,13 +66,45 @@ int main()
     return 0;
 }
 
-
-void operateTrackHatReadyForOperation(trackHat_Device_t* device)
+void printTrackHatInfo(trackHat_Device_t* device)
 {
+    if (device)
+    {
+        uint32_t uptimeSec = 0;
+        TH_ErrorCode result = trackHat_GetUptime(device, &uptimeSec);
+
+        uint32_t seconds = uptimeSec % 60;
+        uint32_t minutes = uptimeSec / 60;
+        uint32_t hours =   minutes / 60;
+        minutes %= 60;
+
+        printf("TrackHat camera info:\n");
+        printf("    Hardware ver. : r%d\n", device->m_hardwareVersion);
+        printf("    Software ver. : %d.%d\n", device->m_softwareVersionMajor,
+                                              device->m_softwareVersionMinor);
+        printf("    Serial Number : %d\n", device->m_serialNumber);
+        printf("    Mode          : %s\n", (device->m_isIdleMode == true) ? 
+                                           "idle" : "sending coordinates" );
+        if (result == TH_SUCCESS)
+            printf("    Uptime        : %d:%02d:%02d\n", hours, minutes, seconds);
+        else
+            printf("    Uptime        : error %d\n" , result);
+        printf("\n");
+    }
+}
+
+void operateTrackHat(trackHat_Device_t* device)
+{
+    printTrackHatInfo(device);
+
     // Update information about device
     TH_ErrorCode result = trackHat_UpdateInfo(device);
     if (result != TH_SUCCESS)
     {
         printf("Can not update device info. Error %d\n", result);
     }
+
+    printf("After updating the TrackHat device information again.\n");
+    printTrackHatInfo(device);
+
 }

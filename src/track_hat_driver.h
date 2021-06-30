@@ -104,22 +104,16 @@ EXPORT_API
 TH_ErrorCode trackHat_GetDetectedPoints(trackHat_Device_t* device, trackHat_Points_t* points);
 
 /**
- * Add callback that will be executed automatically when new data is received.
+ * Set callback that will be executed automatically when new set of points are received.
  */
 EXPORT_API
-TH_ErrorCode trackHat_AddCallback(trackHat_Device_t* device, trackHat_PointsCallback_t newPoints_callback);
+TH_ErrorCode trackHat_SetCallback(trackHat_Device_t* device, trackHat_PointsCallback_t newPoints_callback);
 
 /**
  * Remove previously added callback.
  */
 EXPORT_API
-TH_ErrorCode trackHat_RemoveCallback(trackHat_Device_t* device, trackHat_PointsCallback_t newPoints_callback);
-
-/**
- * Remove all previously added callbacks.
- */
-EXPORT_API
-TH_ErrorCode trackHat_RemoveAllCallbacks(trackHat_Device_t* device);
+TH_ErrorCode trackHat_RemoveCallback(trackHat_Device_t* device);
 
 
 #ifdef __cplusplus
