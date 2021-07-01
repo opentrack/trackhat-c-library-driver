@@ -25,9 +25,9 @@ enum MessageID : uint8_t
 enum class CameraStatus : uint8_t
 {
     CAM_NOT_PRESENT     = 0x00,
-    CAM_PRESENT         = 0x01,
-    CAM_NOT_INITIALIZED = 0x02,
-    CAM_SELF_TEST_FAILD = 0x03,
+    CAM_NOT_INITIALIZED = 0x01,
+    CAM_SELF_TEST_FAILD = 0x02,
+    CAM_READY_TO_USE    = 0x03,
 };
 
 enum class CameraMode : uint8_t
@@ -49,7 +49,7 @@ struct MessageProtect
 {
 protected:
     MessageProtect() :
-        m_newMessageEvent(CreateEvent(NULL, false, 0, NULL)),
+        m_newMessageEvent(CreateEvent(NULL, true, 0, NULL)),
         m_mutex(CreateMutex(NULL, false, NULL))
     { }
 

@@ -221,7 +221,7 @@ namespace UsbSerial
         status = ReadFile(serial.m_comHandler, buffer, maxSize, &readSize, NULL);
         if (status == FALSE)
         {
-            LOG_ERROR("Cannot receive data.");
+            //LOG_ERROR("Cannot receive data.");
             return TH_ERROR_DEVICE_COMUNICATION_FAILD;
         }
 

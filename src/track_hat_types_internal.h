@@ -60,6 +60,7 @@ typedef struct
     trackHat_Callback_t m_callback;
     trackHat_Messages_t m_messages;
     bool m_isOpen = false;
+    bool m_isUnplugged = false;  /* Was connected, is disconnected */
 } trackHat_Internal_t;
 
 

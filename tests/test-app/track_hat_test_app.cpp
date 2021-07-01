@@ -6,18 +6,51 @@
 #include "track_hat_driver.h"
 
 #include <iostream>
+#include <signal.h>
+#include <time.h>
 #include <Windows.h>
 
-/* Operate the TrackHat camera after initializ and connect */
-void operateTrackHat(trackHat_Device_t* device);
+
+/* Use callback to get the coordinates */
+#define USE_CALLBACK_FUNCTION
+
+/* Use 'trackHat_GetDetectedPoints()' to get the coordinates */
+#define USE_GET_FUNCTION
+
+/* Run app flag */
+bool runApplication = true;
+
+/* Raprot error if detected */
+bool errorDetected = false;
 
 /* Operate the TrackHat camera after initializ and connect */
+void useCoordinates(trackHat_Device_t* device);
+
+/* Print recived points */
+void printCoordinates(const trackHat_Points_t* const points);
+
+/* Print information aboit TrackHat device */
 void printTrackHatInfo(trackHat_Device_t* device);
+
+/* New TrackHat points callback */
+void newPointCallback(TH_ErrorCode error, const trackHat_Points_t* const points);
+
+/* handler for terminate signal */
+void signalHandler(int signal)
+{
+    if (signal == SIGINT)
+    {
+        runApplication = false;
+        printf("Stop the application\n");
+    }
+}
 
 int main()
 {
     trackHat_Device_t device;
     TH_ErrorCode result;
+
+    signal(SIGINT, signalHandler);
 
     // Enable debug mode
     trackHat_EnableDebugMode();
@@ -34,24 +67,32 @@ int main()
             result = trackHat_Connect(&device);
             if (result == TH_SUCCESS)
             {
-                // Camera is ready to use
-                operateTrackHat(&device);
+                // Camera is ready for use
+                printTrackHatInfo(&device);
+
+                printf("TrackHat camera is readu for use.\n");
+                system("pause");
+
+                useCoordinates(&device);
 
                 // Disconnect from device
                 result = trackHat_Disconnect(&device);
                 if (result != TH_SUCCESS)
                 {
                     printf("Device not detected. Error %d\n", result);
+                    errorDetected = true;
                 }
             }
             else
             {
                 printf("Cannot connect to the device. Error %d\n", result);
+                errorDetected = true;
             }
         }
         else
         {
             printf("Device not detected. Error %d\n", result);
+            errorDetected = true;
         }
 
         // Deintitialize structure
@@ -60,6 +101,12 @@ int main()
     else
     {
         printf("Initializing filed. Error %d\n", result);
+        errorDetected = true;
+    }
+
+    if (errorDetected)
+    {
+        printf("SOME ERRORS HAVE BEED DETECTED. Check the logs.\n");
     }
 
     system("pause");
@@ -93,18 +140,100 @@ void printTrackHatInfo(trackHat_Device_t* device)
     }
 }
 
-void operateTrackHat(trackHat_Device_t* device)
+void useCoordinates(trackHat_Device_t* device)
 {
-    printTrackHatInfo(device);
+#ifdef USE_CALLBACK_FUNCTION
 
-    // Update information about device
-    TH_ErrorCode result = trackHat_UpdateInfo(device);
-    if (result != TH_SUCCESS)
+    printf("Start work with callback.\n");
+
+    trackHat_SetCallback(device, newPointCallback);
+
+    while (runApplication)
     {
-        printf("Can not update device info. Error %d\n", result);
+        Sleep(100);
+    };
+
+    trackHat_RemoveCallback(device);
+
+    printf("Stop work with callback.\n");
+
+
+#endif //USE_CALLBACK_FUNCTION
+
+#ifdef USE_GET_FUNCTION
+
+    trackHat_Points_t points;
+
+    time_t currentTimeSec;
+    time_t lastTimeSec = 0;
+    time_t timeoutSec = 1;
+
+    time(&currentTimeSec);
+
+    while (runApplication)
+    { 
+        TH_ErrorCode result = trackHat_GetDetectedPoints(device, &points);
+
+        if (result == TH_SUCCESS)
+        {
+            time(&currentTimeSec);
+            if (lastTimeSec != currentTimeSec)
+            {
+                lastTimeSec = currentTimeSec;
+                printCoordinates(&points);
+            }
+        }
+        else
+        {
+            printf("Get coordinates error: %d\n", result);
+            errorDetected = true;
+            Sleep(timeoutSec * 1000);
+        }
     }
 
-    printf("After updating the TrackHat device information again.\n");
-    printTrackHatInfo(device);
+#endif //USE_GET_FUNCTION
 
+}
+
+
+void newPointCallback(TH_ErrorCode error, const trackHat_Points_t* const points)
+{
+    static const time_t timeoutSec = 1;
+    static time_t lastTimeSec = 0;
+    time_t currentTimeSec;
+
+    if (error == TH_SUCCESS)
+    {
+        time(&currentTimeSec);
+        if (currentTimeSec - lastTimeSec > timeoutSec)
+        {
+            lastTimeSec = currentTimeSec;
+            printCoordinates(points);
+        }
+    }
+    else
+    {
+        printf("Get coordinates error: %d\n", error);
+        errorDetected = true;
+    }
+}
+
+
+void printCoordinates(const trackHat_Points_t* const points)
+{
+    if (runApplication)
+    {
+        system("cls");
+        printf("TrackHat points:\n");
+        for (int i = 0; i < TRACK_HAT_NUMBER_OF_POINTS; i++)
+        {
+            if (points->m_point[i].m_brightness > 0)
+            {
+                printf("%d: X: %d    Y: %d\n", i,
+                    points->m_point[i].m_x, points->m_point[i].m_y,
+                    points->m_point[i].m_brightness);
+            }
+        }
+        fflush(stdout);
+    }
 }
