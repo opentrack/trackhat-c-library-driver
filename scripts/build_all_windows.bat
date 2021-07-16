@@ -108,7 +108,6 @@ if %SIGN_SOFTWARE%==1 (
     if %DEBUG_BUILD%==0 (
         echo Signing binaries
         call "%SIGN_SCRIPT%" "TrackHat dll" "%BUILD_DIR%\src\Release\track-hat.dll"
-        call "%SIGN_SCRIPT%" "TrackHat lib" "%BUILD_DIR%\src\Release\track-hat.lib"
     ) else (
         echo Error: software signing is available only for Release.
         goto :showerror
