@@ -39,9 +39,10 @@ ChangesEnvironment=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "..\build\src\Release\track-hat.dll"; DestDir: "{app}"; Flags: ignoreversion;
-Source: "..\src\track_hat_driver.h"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\src\track_hat_types.h"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\src\Release\track-hat.dll"; DestDir: "{app}\lib"; Flags: ignoreversion;
+Source: "..\build\src\Release\track-hat.lib"; DestDir: "{app}\lib"; Flags: ignoreversion;
+Source: "..\src\track_hat_driver.h"; DestDir: "{app}\include"; Flags: ignoreversion
+Source: "..\src\track_hat_types.h"; DestDir: "{app}\include"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
@@ -49,10 +50,10 @@ Name: "{group}\{cm:ProgramOnTheWeb,{#MyAppName}}"; Filename: "{#MyAppURL}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
 [Registry]
-Root: "HKLM"; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; \
+Root: "HKLM"; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}\lib"; \
 Check: IsAdmin and NotExistsInPathHKLM(ExpandConstant('{app}'))
 
-Root: "HKCU"; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; \
+Root: "HKCU"; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}\lib"; \
 Check: not IsAdmin and NotExistsInPathHKCU(ExpandConstant('{app}'))
 
 
