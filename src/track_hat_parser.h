@@ -41,7 +41,7 @@ namespace Parser {
      *
      * \return                       Size of the output message.
      */
-    size_t createMessageSetMode(uint8_t* message, bool coordinates);
+    size_t createMessageSetMode(uint8_t* message, bool coordinates, TH_FrameType frameType);
 
 
     /**
@@ -52,7 +52,6 @@ namespace Parser {
      *
      */
     void parseInputData(std::vector<uint8_t>& input, trackHat_Messages_t& messages);
-
 
     /**
     * Add CRC at the end of frame.
@@ -74,6 +73,10 @@ namespace Parser {
      *
      */
     bool checkCRC(std::vector<uint8_t>& buffer, size_t size);
+
+    void parseRawExtendedPointToHumanRedable(trackHat_ExtendedPointRaw_t& rawPoint, trackHat_ExtendedPoint_t& extendedPointsParsed);
+
+    void printExtendedPoint(trackHat_ExtendedPoint_t extendedPoint, int i);
 
 } // namespace Parser
 

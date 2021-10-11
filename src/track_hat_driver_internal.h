@@ -37,7 +37,7 @@ TH_ErrorCode trackHat_UpdateInternalDeviceInfo(trackHat_Device_t* device);
 
 
 /* Start or stop sending coordinates from the TrackHat camera */
-TH_ErrorCode trackHat_EnableSendingCoordinates(trackHat_Device_t* device, bool enable);
+TH_ErrorCode trackHat_EnableSendingCoordinates(trackHat_Device_t* device, bool enable, TH_FrameType frameType);
 
 
 #endif //_TRACK_HAT_DRIVER_INTERNAL_H_

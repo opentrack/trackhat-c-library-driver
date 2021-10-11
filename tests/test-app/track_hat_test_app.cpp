@@ -12,7 +12,7 @@
 
 
 /* Use callback to get the coordinates */
-#define USE_CALLBACK_FUNCTION
+//#define USE_CALLBACK_FUNCTION 0
 
 /* Use 'trackHat_GetDetectedPoints()' to get the coordinates */
 #define USE_GET_FUNCTION
@@ -64,14 +64,14 @@ int main()
         if (result == TH_SUCCESS)
         {
             // Connect to device
-            result = trackHat_Connect(&device);
+            result = trackHat_Connect(&device, TH_FRAME_EXTENDED);
             if (result == TH_SUCCESS)
             {
                 // Camera is ready for use
-                printTrackHatInfo(&device);
+                //printTrackHatInfo(&device);
 
                 printf("TrackHat camera is readu for use.\n");
-                system("pause");
+                //system("pause");
 
                 useCoordinates(&device);
 
@@ -170,8 +170,10 @@ void useCoordinates(trackHat_Device_t* device)
 
     time(&currentTimeSec);
 
-    while (runApplication)
+    while (1)//runApplication)
     { 
+        Sleep(timeoutSec * 1000);
+
         TH_ErrorCode result = trackHat_GetDetectedPoints(device, &points);
 
         if (result == TH_SUCCESS)

@@ -75,7 +75,7 @@ TH_ErrorCode trackHat_DetectDevice(trackHat_Device_t* device);
  * Note: The device must first be detected using the 'trackHat_DetectDevice()'
  */
 EXPORT_API
-TH_ErrorCode trackHat_Connect(trackHat_Device_t* device);
+TH_ErrorCode trackHat_Connect(trackHat_Device_t* device, TH_FrameType frameType);
 
 /**
  * Disconnect with TrackHat device.

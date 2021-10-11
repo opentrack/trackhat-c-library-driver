@@ -12,7 +12,7 @@
 #include <atomic>
 
 /* Transaction ID counter is one for all library */
-static std::atomic<uint8_t> transactionID = 255;
+static std::atomic<uint8_t> transactionID(255);
 
 namespace Parser {
 
@@ -34,12 +34,13 @@ namespace Parser {
         return i;
     }
 
-    size_t createMessageSetMode(uint8_t* message, bool coordinates)
+    size_t createMessageSetMode(uint8_t* message, bool coordinates, TH_FrameType frameType)
     {
         size_t i = 0;
         message[i++] = MessageID::ID_SET_MODE;
         message[i++] = transactionID++;
         message[i++] = static_cast<uint8_t>(coordinates);
+        message[i++] = static_cast<uint8_t>(frameType);
         appednCRC(message, i);
         return i;
     }
@@ -101,6 +102,13 @@ namespace Parser {
         ReleaseMutex(coordinates.m_mutex);
         //TODO: to remove
         //LOG_INFO("SetEvent " << (int)points[0].m_brightness);
+        for (size_t i=0; i< TRACK_HAT_NUMBER_OF_POINTS; i++)
+        {
+            if (points[i].m_brightness > 0)
+            {
+                std::cout << "Index = " << i << " X= " << points[i].m_x << " Y = " << points[i].m_y << std::endl;
+            }
+        }
         SetEvent(coordinates.m_newMessageEvent);
         SetEvent(coordinates.m_newCallbackEvent);
     }
@@ -251,6 +259,43 @@ namespace Parser {
                     break;
                 }
 
+            case MessageID::ID_EXTENDED_COORDINATES:
+            {
+
+                if (input.size() >= MessageExtendedCoordinates::FrameSize)
+                {
+                    trackHat_ExtendedPointRaw_t rawPoints[TRACK_HAT_NUMBER_OF_POINTS];
+                    MessageExtendedCoordinates extendedCoordinates = {};
+                    bool result = checkCRC(input, MessageExtendedCoordinates::FrameSize);
+                    if (!result)
+                    {
+                        std::cout << "Wrong crc" << std::endl;
+                    }
+                    else
+                    {
+                        memcpy(&rawPoints, input.data()+1, MessageExtendedCoordinates::FrameSize-3);
+                    }
+                    input.erase(input.begin(), input.begin()+MessageExtendedCoordinates::FrameSize);
+                    for (size_t i=0; i<TRACK_HAT_NUMBER_OF_POINTS; i++)
+                    {
+                        parseRawExtendedPointToHumanRedable(rawPoints[i], extendedCoordinates.m_points.m_point[i]);
+                    }
+
+                    for (size_t i=0; i<TRACK_HAT_NUMBER_OF_POINTS; i++)
+                    {
+                        if (extendedCoordinates.m_points.m_point[i].m_averageBrightness > 0)
+                        {
+                            printExtendedPoint(extendedCoordinates.m_points.m_point[i], i);
+                        }
+                    }
+
+                }
+                else
+                {
+                    return;
+                }
+                break;
+            }
                 default:
                 {
                     char byte[8];
@@ -279,6 +324,36 @@ namespace Parser {
         // Calculate CRC without last two bytes
         uint16_t crc2 = calculateCCITTCRC16(buffer, size - 2);
         return crc1 == crc2;
+    }
+
+    void parseRawExtendedPointToHumanRedable(trackHat_ExtendedPointRaw_t& rawPoint, trackHat_ExtendedPoint_t& extendedPointsParsed)
+    {
+        extendedPointsParsed.m_area = (rawPoint.m_areaHigh << 8) | rawPoint.m_areaLow;
+        extendedPointsParsed.m_coordinateX = rawPoint.m_coordinateXHigh;
+        extendedPointsParsed.m_coordinateX = (extendedPointsParsed.m_coordinateX << 8) | rawPoint.m_coordinateXLow;
+        extendedPointsParsed.m_coordinateX = extendedPointsParsed.m_coordinateX & 0x3fff;
+
+        extendedPointsParsed.m_coordinateY = rawPoint.m_coordinateYHigh;
+        extendedPointsParsed.m_coordinateY = (extendedPointsParsed.m_coordinateY << 8) | rawPoint.m_coordinateYLow;
+        extendedPointsParsed.m_coordinateY = extendedPointsParsed.m_coordinateY & 0x3fff;
+
+        extendedPointsParsed.m_averageBrightness = rawPoint.m_averageBrightness;
+        extendedPointsParsed.m_maximumBrightness = rawPoint.m_maximumBrightness;
+        extendedPointsParsed.m_range = rawPoint.m_range;
+        extendedPointsParsed.m_radius = rawPoint.m_radius;
+        extendedPointsParsed.m_boundryLeft = rawPoint.m_boundryLeft;
+        extendedPointsParsed.m_boundryRigth = rawPoint.m_boundryRigth;
+        extendedPointsParsed.m_boundryUp = rawPoint.m_boundryUp;
+        extendedPointsParsed.m_boundryDown = rawPoint.m_boundryDown;
+        extendedPointsParsed.m_aspectRatio = rawPoint.m_aspectRatio;
+        extendedPointsParsed.m_vx = rawPoint.m_vx;
+        extendedPointsParsed.m_vy = rawPoint.m_vy;
+    }
+
+    void printExtendedPoint(trackHat_ExtendedPoint_t extendedPoint, int i)
+    {
+        std::cout << "Index = " << i << " X = " << extendedPoint.m_coordinateX << " Y = " << extendedPoint.m_coordinateY << std::endl;
+        std::cout.flush();
     }
 
 } // namespace Parser

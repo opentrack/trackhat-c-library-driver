@@ -87,7 +87,7 @@ TH_ErrorCode trackHat_DetectDevice(trackHat_Device_t* device)
 }
 
 
-TH_ErrorCode trackHat_Connect(trackHat_Device_t* device)
+TH_ErrorCode trackHat_Connect(trackHat_Device_t* device, TH_FrameType frameType)
 {
     LOG_INFO("Connecting.");
 
@@ -152,7 +152,7 @@ TH_ErrorCode trackHat_Connect(trackHat_Device_t* device)
     }
 
     // Disable Idle mode
-    result = trackHat_EnableSendingCoordinates(device, true);
+    result = trackHat_EnableSendingCoordinates(device, true, frameType);
     if (result != TH_SUCCESS)
     {
         trackHat_Disconnect(device);
@@ -182,7 +182,7 @@ TH_ErrorCode trackHat_Disconnect(trackHat_Device_t* device)
     if (serial.m_isPortOpen)
     {
         // Enable Idle mode
-        trackHat_EnableSendingCoordinates(device, false);
+        trackHat_EnableSendingCoordinates(device, false, TH_FRAME_BASIC);
     }
 
     // Stop receiving thread
@@ -353,7 +353,7 @@ TH_ErrorCode trackHat_UpdateInternalDeviceInfo(trackHat_Device_t* device)
 }
 
 
-TH_ErrorCode trackHat_EnableSendingCoordinates(trackHat_Device_t* device, bool enable)
+TH_ErrorCode trackHat_EnableSendingCoordinates(trackHat_Device_t* device, bool enable, TH_FrameType frameType)
 {
     if ((device == nullptr) || (device->m_pInternal == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
@@ -369,7 +369,7 @@ TH_ErrorCode trackHat_EnableSendingCoordinates(trackHat_Device_t* device, bool e
     LOG_INFO((enable ? "Enable" : "Disable") << " sending of the coordinates.");
 
     uint8_t txMessage[MESSAGE_TX_BUFFER_SIZE];
-    size_t  txMessageSize = Parser::createMessageSetMode(txMessage, enable);
+    size_t  txMessageSize = Parser::createMessageSetMode(txMessage, enable, frameType);
 
     TH_ErrorCode result = UsbSerial::write(serial, txMessage, txMessageSize);
     if (result != TH_SUCCESS)
@@ -432,7 +432,7 @@ DWORD WINAPI trackHat_ReceiverThreadFunction(LPVOID lpParameter)
     // Buffer for serial per iteration MessageCoordinates::FrameSize size makes the USB
     // return the data immediately after receiving the coordinate frame and not wait until
     // the end of the timeout in case the buffer is large 
-    uint8_t serialBuffer[MessageCoordinates::FrameSize];
+    uint8_t serialBuffer[MessageExtendedCoordinates::FrameSize];
     size_t readSize = 0;
 
     std::vector<uint8_t> dataBuffer;   // data to parse
