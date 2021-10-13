@@ -15,6 +15,7 @@
 #include <time.h>
 #include <vector>
 
+const size_t CAMERA_ERROR_CHECK_INTERVAL = 2;
 
 void trackHat_EnableDebugMode()
 {
@@ -95,8 +96,7 @@ TH_ErrorCode trackHat_waitForResponse(trackHat_Internal_t* internal, uint8_t tra
             return TH_FAILED_TO_SET_REGISTER;
         else if (messages->m_lastACKTransactionId >= transactionID)
             return TH_SUCCESS;
-        else
-            Sleep(50);
+        Sleep(50);
     }
 
 }
@@ -525,7 +525,7 @@ DWORD WINAPI trackHat_CallbackThreadFunction(LPVOID lpParameter)
                     time(&currentTimeSec);
 
                     // Run callback function with error at intervals of 2 seconds
-                    if (currentTimeSec - lastErrorTimeSec > 2)
+                    if (currentTimeSec - lastErrorTimeSec > CAMERA_ERROR_CHECK_INTERVAL)
                     {
                         TH_ErrorCode error = TH_ERROR_WRONG_PARAMETER;
                         if (result == WAIT_TIMEOUT)
@@ -802,8 +802,8 @@ TH_ErrorCode trackHat_SetRegisterValue(trackHat_Device_t* device, trackHat_SetRe
     }
 
     uint8_t transactionID = 0;
-    uint8_t txMessage[MESSAGE_TX_BUFFER_SIZE];
-    size_t  txMessageSize = Parser::createMessageSetRegister(txMessage,  newRegisterValue, &transactionID);
+    uint8_t txMessage[MESSAGE_TX_BUFFER_SIZE] = {};
+    size_t  txMessageSize = Parser::createMessageSetRegister(txMessage, MESSAGE_TX_BUFFER_SIZE, newRegisterValue, &transactionID);
     TH_ErrorCode result = UsbSerial::write(serial, txMessage, txMessageSize);
     if (result != TH_SUCCESS)
     {

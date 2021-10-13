@@ -46,8 +46,10 @@ namespace Parser
         return i;
     }
 
-    size_t createMessageSetRegister(uint8_t* message, trackHat_SetRegister_t* setRegister, uint8_t* messageTransactionID)
+    size_t createMessageSetRegister(uint8_t* message, uint16_t bufferSize, trackHat_SetRegister_t* setRegister, uint8_t* messageTransactionID)
     {
+        if (bufferSize < 7)
+            return 0;
         *messageTransactionID = transactionID;
         message[0] = MessageID::ID_SET_REGISTER_VALUE;
         message[1] = transactionID++;

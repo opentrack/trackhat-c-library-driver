@@ -11,7 +11,8 @@
 #include <stdint.h>
 #include <vector>
 
-namespace Parser {
+namespace Parser
+{
 
     /**
      * Create binary frame for GET_STATUS message.
@@ -51,7 +52,7 @@ namespace Parser {
      *
      * \return                       Size of the output message.
      */
-    size_t createMessageSetRegister(uint8_t* message, trackHat_SetRegister_t* setRegister, uint8_t* messageTransactionID);
+    size_t createMessageSetRegister(uint8_t* message, uint16_t bufferSize, trackHat_SetRegister_t* setRegister, uint8_t* messageTransactionID);
 
 
     /**

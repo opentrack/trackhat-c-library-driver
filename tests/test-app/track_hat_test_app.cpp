@@ -84,6 +84,12 @@ int main()
                 printf("TrackHat camera is readu for use.\n");
                 system("pause");
 
+                /*
+                 * Example how to set register
+                 * 0X00 - register bank
+                 * 0x19 - register address
+                 * Register controls how many points are detected
+                 * */
                 trackHat_SetRegister_t registerValue = {0x00, 0x19, 0x03};
                 trackHat_SetRegisterValue(&device, &registerValue);
                 registerValue = {0x00, 0x19, 0x02};
