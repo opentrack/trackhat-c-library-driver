@@ -30,6 +30,7 @@ enum TH_ErrorCode
     TH_ERROR_CAMERA_SELFT_TEST_FAILD = -9,
     TH_ERROR_WRONG_PARAMETER = -10,
     TH_MEMORY_ALLOCATION_FIELD = -11,
+    TH_FAILED_TO_SET_REGISTER = -12
 };
 
 enum TH_FrameType
@@ -122,6 +123,14 @@ typedef struct
  * Declaration type of callback to call after receiving new points from the TrackHat device.
  */
 typedef void (*trackHat_PointsCallback_t)(TH_ErrorCode error, const trackHat_Points_t* const points);
+typedef void (*trackHat_ExtendedPointsCallback_t)(TH_ErrorCode error, const trackHat_ExtendedPoints_t* const points);
+
+typedef struct trackHat_SetRegister_t
+{
+    uint8_t m_registerBank;
+    uint8_t m_registerAddress;
+    uint8_t m_registerValue;
+} trackHat_SetRegister_t;
 
 
 #ifdef __cplusplus

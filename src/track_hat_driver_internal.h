@@ -20,8 +20,14 @@ DWORD WINAPI trackHat_CallbackThreadFunction(LPVOID lpParameter);
 
 
 /* Run callback function with provided parameters */
-void trackHat_CallbackFunction(trackHat_PointsCallback_t callbackFunction, TH_ErrorCode errorCode,
+void trackHat_CallbackFunction(trackHat_PointsCallback_t callbackFunction,
+                               TH_ErrorCode errorCode,
                                const trackHat_Points_t* const points);
+
+/* Run callback function with provided parameters */
+void trackHat_CallbackFunction(trackHat_ExtendedPointsCallback_t callbackFunction,
+                               TH_ErrorCode errorCode,
+                               const trackHat_ExtendedPoints_t* const points);
 
 
 /* Handle the new message event */

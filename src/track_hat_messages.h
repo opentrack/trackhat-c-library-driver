@@ -18,8 +18,9 @@ enum MessageID : uint8_t
     ID_GET_DEVICE_INFO      = 0x03,
     ID_DEVICE_INFO          = 0x04,
     ID_SET_MODE             = 0x05,
+    ID_SET_REGISTER_VALUE   = 0x06,
     ID_COORDINATE           = 0x0b,
-    ID_EXTENDED_COORDINATES = 12,
+    ID_EXTENDED_COORDINATES = 0x0c,
     ID_NACK                 = 0xff
 };
 
@@ -80,7 +81,6 @@ struct MessageStatus : public MessageBase, public MessageProtect
     CameraMode   m_camMode = CameraMode::CAM_IDLE;
     uint32_t     m_uptimeInSec = 0;
 };
-
 
 struct MessageDeviceInfo : public MessageBase, public MessageProtect
 {

@@ -13,8 +13,7 @@ include_directories(${CMAKE_SOURCE_DIR}/src)
 
 # Set sources
 set(SOURCES
-  track_hat_test_app.cpp
-  ${TRACK_HAT_DRIVER_SOURCES})
+  track_hat_test_app.cpp)
 
 #message(FATAL_ERROR ${SOURCES})
 # Shared library target
@@ -23,9 +22,9 @@ add_executable(
   ${SOURCES})
 
 ## Link shared library
-#target_link_libraries(
-#  track-hat-test
-#  PUBLIC track-hat)
+target_link_libraries(
+  track-hat-test
+  PUBLIC track-hat)
 
 # Copy track-hat.dll
 add_custom_command(

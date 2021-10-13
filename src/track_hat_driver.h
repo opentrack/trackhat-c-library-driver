@@ -104,16 +104,38 @@ EXPORT_API
 TH_ErrorCode trackHat_GetDetectedPoints(trackHat_Device_t* device, trackHat_Points_t* points);
 
 /**
+ * Get list of detected points by the TrackHat camera.
+ *
+ * Note: This function waits for the next set of points with 50 ms timeout.
+ */
+EXPORT_API
+TH_ErrorCode trackHat_GetDetectedPointsExtended(trackHat_Device_t* device, trackHat_ExtendedPoints_t* points);
+
+
+/**
  * Set callback that will be executed automatically when new set of points are received.
  */
 EXPORT_API
 TH_ErrorCode trackHat_SetCallback(trackHat_Device_t* device, trackHat_PointsCallback_t newPoints_callback);
 
 /**
+ * Set extended points callback that will be executed automatically when new set of points are received.
+ */
+EXPORT_API
+TH_ErrorCode trackHat_SetExtendedPointsCallback(trackHat_Device_t* device, trackHat_ExtendedPointsCallback_t newExtendedPointsCallback);
+
+
+/**
  * Remove previously added callback.
  */
 EXPORT_API
 TH_ErrorCode trackHat_RemoveCallback(trackHat_Device_t* device);
+
+/**
+ * Remove previously added callback.
+ */
+EXPORT_API
+TH_ErrorCode trackHat_SetRegisterValue(trackHat_Device_t* device, trackHat_SetRegister_t* newRegisterValue);
 
 
 #ifdef __cplusplus

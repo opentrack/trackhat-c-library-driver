@@ -14,7 +14,8 @@
 /* Transaction ID counter is one for all library */
 static std::atomic<uint8_t> transactionID(255);
 
-namespace Parser {
+namespace Parser
+{
 
     size_t createMessageGetStatus(uint8_t* message)
     {
@@ -43,6 +44,19 @@ namespace Parser {
         message[i++] = static_cast<uint8_t>(frameType);
         appednCRC(message, i);
         return i;
+    }
+
+    size_t createMessageSetRegister(uint8_t* message, trackHat_SetRegister_t* setRegister, uint8_t* messageTransactionID)
+    {
+        *messageTransactionID = transactionID;
+        message[0] = MessageID::ID_SET_REGISTER_VALUE;
+        message[1] = transactionID++;
+        message[2] = static_cast<uint8_t>(setRegister->m_registerBank);
+        message[3] = static_cast<uint8_t>(setRegister->m_registerAddress);
+        message[4] = static_cast<uint8_t>(setRegister->m_registerValue);
+        size_t messageLength = 5;
+        appednCRC(message, messageLength);
+        return messageLength;
     }
 
     void parseMessageStatus(std::vector<uint8_t>& input, MessageStatus& status)
@@ -102,15 +116,27 @@ namespace Parser {
         ReleaseMutex(coordinates.m_mutex);
         //TODO: to remove
         //LOG_INFO("SetEvent " << (int)points[0].m_brightness);
-        for (size_t i=0; i< TRACK_HAT_NUMBER_OF_POINTS; i++)
-        {
-            if (points[i].m_brightness > 0)
-            {
-                std::cout << "Index = " << i << " X= " << points[i].m_x << " Y = " << points[i].m_y << std::endl;
-            }
-        }
         SetEvent(coordinates.m_newMessageEvent);
         SetEvent(coordinates.m_newCallbackEvent);
+    }
+
+    void parseMessageExtendedCoordinates(std::vector<uint8_t>& input, MessageExtendedCoordinates& extendedCoordinates)
+    {
+        trackHat_ExtendedPointRaw_t rawPoints[TRACK_HAT_NUMBER_OF_POINTS];
+
+        bool result = checkCRC(input, MessageExtendedCoordinates::FrameSize);
+        if (result)
+        {
+            memcpy(&rawPoints, input.data()+1, MessageExtendedCoordinates::FrameSize-3);
+            for (size_t i=0; i<TRACK_HAT_NUMBER_OF_POINTS; i++)
+            {
+                parseRawExtendedPointToHumanRedable(rawPoints[i], extendedCoordinates.m_points.m_point[i]);
+            }
+            ReleaseMutex(extendedCoordinates.m_mutex);
+            SetEvent(extendedCoordinates.m_newMessageEvent);
+            SetEvent(extendedCoordinates.m_newCallbackEvent);
+        }
+        input.erase(input.begin(), input.begin()+MessageExtendedCoordinates::FrameSize);
     }
 
     void parseMessageACK(std::vector<uint8_t>& input, trackHat_Messages_t& messages)
@@ -264,31 +290,7 @@ namespace Parser {
 
                 if (input.size() >= MessageExtendedCoordinates::FrameSize)
                 {
-                    trackHat_ExtendedPointRaw_t rawPoints[TRACK_HAT_NUMBER_OF_POINTS];
-                    MessageExtendedCoordinates extendedCoordinates = {};
-                    bool result = checkCRC(input, MessageExtendedCoordinates::FrameSize);
-                    if (!result)
-                    {
-                        std::cout << "Wrong crc" << std::endl;
-                    }
-                    else
-                    {
-                        memcpy(&rawPoints, input.data()+1, MessageExtendedCoordinates::FrameSize-3);
-                    }
-                    input.erase(input.begin(), input.begin()+MessageExtendedCoordinates::FrameSize);
-                    for (size_t i=0; i<TRACK_HAT_NUMBER_OF_POINTS; i++)
-                    {
-                        parseRawExtendedPointToHumanRedable(rawPoints[i], extendedCoordinates.m_points.m_point[i]);
-                    }
-
-                    for (size_t i=0; i<TRACK_HAT_NUMBER_OF_POINTS; i++)
-                    {
-                        if (extendedCoordinates.m_points.m_point[i].m_averageBrightness > 0)
-                        {
-                            printExtendedPoint(extendedCoordinates.m_points.m_point[i], i);
-                        }
-                    }
-
+                    parseMessageExtendedCoordinates(input, messages.m_extendedCoordinates);
                 }
                 else
                 {
@@ -355,5 +357,6 @@ namespace Parser {
         std::cout << "Index = " << i << " X = " << extendedPoint.m_coordinateX << " Y = " << extendedPoint.m_coordinateY << std::endl;
         std::cout.flush();
     }
+
 
 } // namespace Parser
