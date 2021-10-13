@@ -12,14 +12,16 @@
 
 enum MessageID : uint8_t
 {
-    ID_ACK             = 0x00,
-    ID_GET_STATUS      = 0x01,
-    ID_STATUS          = 0x02,
-    ID_GET_DEVICE_INFO = 0x03,
-    ID_DEVICE_INFO     = 0x04,
-    ID_SET_MODE        = 0x05,
-    ID_COORDINATE      = 0x0b,
-    ID_NACK            = 0xff
+    ID_ACK                  = 0x00,
+    ID_GET_STATUS           = 0x01,
+    ID_STATUS               = 0x02,
+    ID_GET_DEVICE_INFO      = 0x03,
+    ID_DEVICE_INFO          = 0x04,
+    ID_SET_MODE             = 0x05,
+    ID_SET_REGISTER_VALUE   = 0x06,
+    ID_COORDINATE           = 0x0b,
+    ID_EXTENDED_COORDINATES = 0x0c,
+    ID_NACK                 = 0xff
 };
 
 enum class CameraStatus : uint8_t
@@ -80,7 +82,6 @@ struct MessageStatus : public MessageBase, public MessageProtect
     uint32_t     m_uptimeInSec = 0;
 };
 
-
 struct MessageDeviceInfo : public MessageBase, public MessageProtect
 {
     static const size_t FrameSize = 11;
@@ -105,6 +106,22 @@ struct MessageCoordinates : public MessageProtect
     static const size_t FrameSize = 83;
 
     trackHat_Points_t m_points;
+    HANDLE m_newCallbackEvent;
+};
+
+struct MessageExtendedCoordinates : public MessageProtect
+{
+    MessageExtendedCoordinates():
+        m_newCallbackEvent(CreateEvent(NULL, false, 0, NULL))
+    { }
+
+    ~MessageExtendedCoordinates()
+    {
+        CloseHandle(m_newCallbackEvent);
+    }
+    static const size_t FrameSize = 259;
+
+    trackHat_ExtendedPoints_t m_points;
     HANDLE m_newCallbackEvent;
 };
 

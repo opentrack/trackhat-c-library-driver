@@ -15,6 +15,7 @@
 #include <time.h>
 #include <vector>
 
+const size_t CAMERA_ERROR_CHECK_INTERVAL = 2;
 
 void trackHat_EnableDebugMode()
 {
@@ -86,8 +87,22 @@ TH_ErrorCode trackHat_DetectDevice(trackHat_Device_t* device)
     return TH_SUCCESS;
 }
 
+TH_ErrorCode trackHat_waitForResponse(trackHat_Internal_t* internal, uint8_t transactionID)
+{
+    trackHat_Messages_t* messages = &internal->m_messages;
+    while (1) // add timeout
+    {
+        if (messages->m_nack.m_transactionID == transactionID)
+            return TH_FAILED_TO_SET_REGISTER;
+        else if (messages->m_lastACKTransactionId >= transactionID)
+            return TH_SUCCESS;
+        Sleep(50);
+    }
 
-TH_ErrorCode trackHat_Connect(trackHat_Device_t* device)
+}
+
+
+TH_ErrorCode trackHat_Connect(trackHat_Device_t* device, TH_FrameType frameType)
 {
     LOG_INFO("Connecting.");
 
@@ -152,7 +167,7 @@ TH_ErrorCode trackHat_Connect(trackHat_Device_t* device)
     }
 
     // Disable Idle mode
-    result = trackHat_EnableSendingCoordinates(device, true);
+    result = trackHat_EnableSendingCoordinates(device, true, frameType);
     if (result != TH_SUCCESS)
     {
         trackHat_Disconnect(device);
@@ -182,7 +197,7 @@ TH_ErrorCode trackHat_Disconnect(trackHat_Device_t* device)
     if (serial.m_isPortOpen)
     {
         // Enable Idle mode
-        trackHat_EnableSendingCoordinates(device, false);
+        trackHat_EnableSendingCoordinates(device, false, TH_FRAME_BASIC);
     }
 
     // Stop receiving thread
@@ -353,13 +368,14 @@ TH_ErrorCode trackHat_UpdateInternalDeviceInfo(trackHat_Device_t* device)
 }
 
 
-TH_ErrorCode trackHat_EnableSendingCoordinates(trackHat_Device_t* device, bool enable)
+TH_ErrorCode trackHat_EnableSendingCoordinates(trackHat_Device_t* device, bool enable, TH_FrameType frameType)
 {
     if ((device == nullptr) || (device->m_pInternal == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
 
     trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
     usbSerial_t& serial = internal.m_serial;
+    internal.m_frameType = frameType;
 
     if (internal.m_isUnplugged)
     {
@@ -369,7 +385,7 @@ TH_ErrorCode trackHat_EnableSendingCoordinates(trackHat_Device_t* device, bool e
     LOG_INFO((enable ? "Enable" : "Disable") << " sending of the coordinates.");
 
     uint8_t txMessage[MESSAGE_TX_BUFFER_SIZE];
-    size_t  txMessageSize = Parser::createMessageSetMode(txMessage, enable);
+    size_t  txMessageSize = Parser::createMessageSetMode(txMessage, enable, frameType);
 
     TH_ErrorCode result = UsbSerial::write(serial, txMessage, txMessageSize);
     if (result != TH_SUCCESS)
@@ -432,7 +448,7 @@ DWORD WINAPI trackHat_ReceiverThreadFunction(LPVOID lpParameter)
     // Buffer for serial per iteration MessageCoordinates::FrameSize size makes the USB
     // return the data immediately after receiving the coordinate frame and not wait until
     // the end of the timeout in case the buffer is large 
-    uint8_t serialBuffer[MessageCoordinates::FrameSize];
+    uint8_t serialBuffer[MessageExtendedCoordinates::FrameSize];
     size_t readSize = 0;
 
     std::vector<uint8_t> dataBuffer;   // data to parse
@@ -471,56 +487,111 @@ DWORD WINAPI trackHat_CallbackThreadFunction(LPVOID lpParameter)
     trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(lpParameter);
     trackHat_Callback_t& callback = internal.m_callback;
     MessageCoordinates& coordinates = internal.m_messages.m_coordinates;
+    MessageExtendedCoordinates& extendedCoordinates = internal.m_messages.m_extendedCoordinates;
+
     time_t lastErrorTimeSec = 0;
     trackHat_Points_t points;
+    trackHat_ExtendedPoints_t extendedPoints;
     DWORD result;
 
     LOG_INFO("Callback system started.");
 
     while (callback.m_thread.m_isRunning)
     {
-        // Check 'm_thread.m_isRunning' every 100 ms
-        result = WaitForSingleObject(coordinates.m_newCallbackEvent, 100);
-
-        if (callback.m_thread.m_isRunning == false)
-            break;
-
-        WaitForSingleObject(callback.m_mutex, INFINITE);
-        if (callback.m_function != nullptr)
+        if (internal.m_frameType == TH_FRAME_BASIC)
         {
-            if (result == WAIT_OBJECT_0)
-            {
-                WaitForSingleObject(coordinates.m_mutex, INFINITE);
-                memcpy(&points, &coordinates.m_points, sizeof(trackHat_Points_t));
-                ReleaseMutex(coordinates.m_mutex);
+            // Check 'm_thread.m_isRunning' every 100 ms
 
-                trackHat_CallbackFunction(callback.m_function, TH_SUCCESS, &points);
-            }
-            else
-            {
-                time_t currentTimeSec;
-                time(&currentTimeSec);
+            result = WaitForSingleObject(coordinates.m_newCallbackEvent, 100);
 
-                // Run callback function with error at intervals of 2 seconds
-                if (currentTimeSec - lastErrorTimeSec > 2)
+            if (callback.m_thread.m_isRunning == false)
+                break;
+
+            WaitForSingleObject(callback.m_mutex, INFINITE);
+
+            if (callback.m_simplePointsCallbackFunction != nullptr)
+            {
+                if (result == WAIT_OBJECT_0)
                 {
-                    TH_ErrorCode error = TH_ERROR_WRONG_PARAMETER;
-                    if (result == WAIT_TIMEOUT)
-                    {
-                        if (internal.m_isUnplugged)
-                            error = TH_ERROR_DEVICE_DISCONECTED;
-                        else if (internal.m_isOpen)
-                            error = TH_ERROR_DEVICE_COMUNICATION_TIMEOUT;
-                        else
-                            error = TH_ERROR_DEVICE_NOT_OPEN;
-                    }
+                    WaitForSingleObject(coordinates.m_mutex, INFINITE);
+                    memcpy(&points, &coordinates.m_points, sizeof(trackHat_Points_t));
+                    ReleaseMutex(coordinates.m_mutex);
 
-                    trackHat_CallbackFunction(callback.m_function, error, nullptr);
-                    lastErrorTimeSec = currentTimeSec;
+                    trackHat_CallbackFunction(callback.m_simplePointsCallbackFunction, TH_SUCCESS, &points);
+                }
+                else
+                {
+                    time_t currentTimeSec;
+                    time(&currentTimeSec);
+
+                    // Run callback function with error at intervals of 2 seconds
+                    if (currentTimeSec - lastErrorTimeSec > CAMERA_ERROR_CHECK_INTERVAL)
+                    {
+                        TH_ErrorCode error = TH_ERROR_WRONG_PARAMETER;
+                        if (result == WAIT_TIMEOUT)
+                        {
+                            if (internal.m_isUnplugged)
+                                error = TH_ERROR_DEVICE_DISCONECTED;
+                            else if (internal.m_isOpen)
+                                error = TH_ERROR_DEVICE_COMUNICATION_TIMEOUT;
+                            else
+                                error = TH_ERROR_DEVICE_NOT_OPEN;
+                        }
+
+                        trackHat_CallbackFunction(callback.m_simplePointsCallbackFunction, error, nullptr);
+                        lastErrorTimeSec = currentTimeSec;
+                    }
+                }
+            }
+        }
+        else if (internal.m_frameType == TH_FRAME_EXTENDED)
+        {
+            // Check 'm_thread.m_isRunning' every 100 ms
+
+            result = WaitForSingleObject(extendedCoordinates.m_newCallbackEvent, 100);
+
+            if (callback.m_thread.m_isRunning == false)
+                break;
+
+            WaitForSingleObject(callback.m_mutex, INFINITE);
+
+            if (callback.m_extendedPointsCallbackFunction != nullptr)
+            {
+                if (result == WAIT_OBJECT_0)
+                {
+                    WaitForSingleObject(extendedCoordinates.m_mutex, INFINITE);
+                    memcpy(&extendedPoints, &extendedCoordinates.m_points, sizeof(trackHat_ExtendedPoints_t));
+                    ReleaseMutex(extendedCoordinates.m_mutex);
+
+                    trackHat_CallbackFunction(callback.m_extendedPointsCallbackFunction, TH_SUCCESS, &extendedPoints);
+                }
+                else
+                {
+                    time_t currentTimeSec;
+                    time(&currentTimeSec);
+
+                    // Run callback function with error at intervals of 2 seconds
+                    if (currentTimeSec - lastErrorTimeSec > 2)
+                    {
+                        TH_ErrorCode error = TH_ERROR_WRONG_PARAMETER;
+                        if (result == WAIT_TIMEOUT)
+                        {
+                            if (internal.m_isUnplugged)
+                                error = TH_ERROR_DEVICE_DISCONECTED;
+                            else if (internal.m_isOpen)
+                                error = TH_ERROR_DEVICE_COMUNICATION_TIMEOUT;
+                            else
+                                error = TH_ERROR_DEVICE_NOT_OPEN;
+                        }
+
+                        trackHat_CallbackFunction(callback.m_extendedPointsCallbackFunction, error, nullptr);
+                        lastErrorTimeSec = currentTimeSec;
+                    }
                 }
             }
         }
         ReleaseMutex(callback.m_mutex);
+
     }
 
     LOG_INFO("Callback system finished.");
@@ -529,6 +600,21 @@ DWORD WINAPI trackHat_CallbackThreadFunction(LPVOID lpParameter)
 
 
 void trackHat_CallbackFunction(trackHat_PointsCallback_t callbackFunction, TH_ErrorCode errorCode, const trackHat_Points_t* const points)
+{
+    try
+    {
+        callbackFunction(errorCode, points);
+    }
+    catch (const std::exception&)
+    {
+        LOG_ERROR("An exception has occurred in the callback function.");
+    }
+}
+
+/* Run callback function with provided parameters */
+void trackHat_CallbackFunction(trackHat_ExtendedPointsCallback_t callbackFunction,
+                               TH_ErrorCode errorCode,
+                               const trackHat_ExtendedPoints_t * const points)
 {
     try
     {
@@ -570,7 +656,7 @@ TH_ErrorCode trackHat_GetDetectedPoints(trackHat_Device_t* device, trackHat_Poin
         return TH_ERROR_WRONG_PARAMETER;
 
     trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
-    MessageCoordinates&  coordinates = internal.m_messages.m_coordinates;
+    MessageCoordinates& coordinates = internal.m_messages.m_coordinates;
     TH_ErrorCode result = TH_ERROR_WRONG_PARAMETER;
 
     if (internal.m_isUnplugged)
@@ -591,6 +677,33 @@ TH_ErrorCode trackHat_GetDetectedPoints(trackHat_Device_t* device, trackHat_Poin
     return TH_SUCCESS;
 }
 
+TH_ErrorCode trackHat_GetDetectedExtendedPoints(trackHat_Device_t* device, trackHat_ExtendedPoints_t* points)
+{
+    if ((device == nullptr) || (device->m_pInternal == nullptr) || (points == nullptr))
+        return TH_ERROR_WRONG_PARAMETER;
+
+    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    MessageExtendedCoordinates& extendedCoordinates = internal.m_messages.m_extendedCoordinates;
+    TH_ErrorCode result = TH_ERROR_WRONG_PARAMETER;
+
+    if (internal.m_isUnplugged)
+    {
+        return TH_ERROR_DEVICE_DISCONECTED;
+    }
+
+    result = trackHat_WaitForNewMessageEvent(extendedCoordinates.m_newMessageEvent /*, "Coordinates message" */);
+    ResetEvent(extendedCoordinates.m_newMessageEvent);
+
+    if (result != TH_SUCCESS)
+        return result;
+
+    WaitForSingleObject(extendedCoordinates.m_mutex, INFINITE);
+    memcpy(points, &extendedCoordinates.m_points, sizeof(trackHat_ExtendedPoints_t));
+    ReleaseMutex(extendedCoordinates.m_mutex);
+
+    return TH_SUCCESS;
+}
+
 
 TH_ErrorCode trackHat_SetCallback(trackHat_Device_t* device, trackHat_PointsCallback_t newPoints_callback)
 {
@@ -604,14 +717,14 @@ TH_ErrorCode trackHat_SetCallback(trackHat_Device_t* device, trackHat_PointsCall
     {
         LOG_INFO("Set callback.");
     }
-    else if (callback.m_function != nullptr)
+    else if (callback.m_simplePointsCallbackFunction != nullptr)
     {
         // (newPoints_callback == nullptr) && (callback.m_function != nullptr)
         LOG_INFO("Remove callback.");
     }
 
     WaitForSingleObject(callback.m_mutex, INFINITE);
-    callback.m_function = newPoints_callback;
+    callback.m_simplePointsCallbackFunction = newPoints_callback;
     ReleaseMutex(callback.m_mutex);
 
     return TH_SUCCESS;
@@ -622,3 +735,84 @@ TH_ErrorCode trackHat_RemoveCallback(trackHat_Device_t* device)
 {
     return trackHat_SetCallback(device, nullptr);
 }
+
+TH_ErrorCode trackHat_SetExtendedPointsCallback(trackHat_Device_t *device, trackHat_ExtendedPointsCallback_t newExtendedPointsCallback)
+{
+    if ((device == nullptr) || (device->m_pInternal == nullptr))
+        return TH_ERROR_WRONG_PARAMETER;
+
+    trackHat_Callback_t& callback = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal)->m_callback;
+
+
+    if (newExtendedPointsCallback != nullptr)
+    {
+        LOG_INFO("Set callback.");
+    }
+    else if (callback.m_simplePointsCallbackFunction != nullptr)
+    {
+        // (newPoints_callback == nullptr) && (callback.m_function != nullptr)
+        LOG_INFO("Remove callback.");
+    }
+
+    WaitForSingleObject(callback.m_mutex, INFINITE);
+    callback.m_extendedPointsCallbackFunction = newExtendedPointsCallback;
+    ReleaseMutex(callback.m_mutex);
+
+    return TH_SUCCESS;
+}
+
+TH_ErrorCode trackHat_GetDetectedPointsExtended(trackHat_Device_t *device, trackHat_ExtendedPoints_t *points)
+{
+    if ((device == nullptr) || (device->m_pInternal == nullptr) || (points == nullptr))
+        return TH_ERROR_WRONG_PARAMETER;
+
+    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    MessageExtendedCoordinates& extendedCoordinates = internal.m_messages.m_extendedCoordinates;
+    TH_ErrorCode result = TH_ERROR_WRONG_PARAMETER;
+
+    if (internal.m_isUnplugged)
+    {
+        return TH_ERROR_DEVICE_DISCONECTED;
+    }
+
+    result = trackHat_WaitForNewMessageEvent(extendedCoordinates.m_newMessageEvent /*, "Coordinates message" */);
+    ResetEvent(extendedCoordinates.m_newMessageEvent);
+
+    if (result != TH_SUCCESS)
+        return result;
+
+    WaitForSingleObject(extendedCoordinates.m_mutex, INFINITE);
+    memcpy(points, &extendedCoordinates.m_points, sizeof(trackHat_ExtendedPoints_t));
+    ReleaseMutex(extendedCoordinates.m_mutex);
+
+    return TH_SUCCESS;
+}
+
+TH_ErrorCode trackHat_SetRegisterValue(trackHat_Device_t* device, trackHat_SetRegister_t* newRegisterValue)
+{
+    if ((device==nullptr) || (device->m_pInternal == nullptr))
+        return TH_ERROR_WRONG_PARAMETER;
+
+    trackHat_Internal_t* internal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    usbSerial_t& serial = internal->m_serial;
+
+    if (internal->m_isUnplugged)
+    {
+        return TH_ERROR_DEVICE_DISCONECTED;
+    }
+
+    uint8_t transactionID = 0;
+    uint8_t txMessage[MESSAGE_TX_BUFFER_SIZE] = {};
+    size_t  txMessageSize = Parser::createMessageSetRegister(txMessage, MESSAGE_TX_BUFFER_SIZE, newRegisterValue, &transactionID);
+    TH_ErrorCode result = UsbSerial::write(serial, txMessage, txMessageSize);
+    if (result != TH_SUCCESS)
+    {
+        return result;
+    }
+
+    result = trackHat_waitForResponse(internal, transactionID);
+
+    return result;
+}
+
+

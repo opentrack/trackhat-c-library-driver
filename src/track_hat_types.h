@@ -30,6 +30,13 @@ enum TH_ErrorCode
     TH_ERROR_CAMERA_SELFT_TEST_FAILD = -9,
     TH_ERROR_WRONG_PARAMETER = -10,
     TH_MEMORY_ALLOCATION_FIELD = -11,
+    TH_FAILED_TO_SET_REGISTER = -12
+};
+
+enum TH_FrameType
+{
+    TH_FRAME_BASIC = 0,
+    TH_FRAME_EXTENDED = 1,
 };
 
 /* Maximum number of points detected by TrackHat camera. */
@@ -44,6 +51,7 @@ typedef struct
     uint8_t  m_softwareVersionMinor;
     uint8_t  m_hardwareVersion;
     uint8_t  m_isIdleMode;
+    TH_FrameType m_frameType;
 } trackHat_Device_t;
 
 /* TrackHat single point. */
@@ -60,10 +68,69 @@ typedef struct
     trackHat_Point_t m_point[TRACK_HAT_NUMBER_OF_POINTS];
 } trackHat_Points_t;
 
+
+/* TrackHat single extended point. */
+#pragma pack()
+typedef struct trackHat_ExtendedPointRaw_t
+{
+    uint8_t m_areaLow;
+    uint8_t m_areaHigh;
+    uint8_t m_coordinateXLow;
+    uint8_t m_coordinateXHigh;
+    uint8_t m_coordinateYLow;
+    uint8_t m_coordinateYHigh;
+    uint8_t m_averageBrightness;
+    uint8_t m_maximumBrightness;
+    uint8_t m_range:4;
+    uint8_t m_radius:4;
+    uint8_t m_boundryLeft;
+    uint8_t m_boundryRigth;
+    uint8_t m_boundryUp;
+    uint8_t m_boundryDown;
+    uint8_t m_aspectRatio;
+    uint8_t m_vx;
+    uint8_t m_vy;
+} trackHat_ExtendedPointRaw_t;
+
+
+/* TrackHat single extended point. */
+typedef struct trackHat_ExtendedPoint_t
+{
+    uint16_t m_area;
+    uint16_t m_coordinateX;
+    uint16_t m_coordinateY;
+    uint8_t m_averageBrightness;
+    uint8_t m_maximumBrightness;
+    uint8_t m_range:4;
+    uint8_t m_radius:4;
+    uint8_t m_boundryLeft;
+    uint8_t m_boundryRigth;
+    uint8_t m_boundryUp;
+    uint8_t m_boundryDown;
+    uint8_t m_aspectRatio;
+    uint8_t m_vx;
+    uint8_t m_vy;
+} trackHat_ExtendedPoint_t;
+
+/* TrackHat set of points. */
+#pragma pack()
+typedef struct
+{
+    trackHat_ExtendedPoint_t m_point[TRACK_HAT_NUMBER_OF_POINTS];
+} trackHat_ExtendedPoints_t;
+
 /**
  * Declaration type of callback to call after receiving new points from the TrackHat device.
  */
 typedef void (*trackHat_PointsCallback_t)(TH_ErrorCode error, const trackHat_Points_t* const points);
+typedef void (*trackHat_ExtendedPointsCallback_t)(TH_ErrorCode error, const trackHat_ExtendedPoints_t* const points);
+
+typedef struct trackHat_SetRegister_t
+{
+    uint8_t m_registerBank;
+    uint8_t m_registerAddress;
+    uint8_t m_registerValue;
+} trackHat_SetRegister_t;
 
 
 #ifdef __cplusplus

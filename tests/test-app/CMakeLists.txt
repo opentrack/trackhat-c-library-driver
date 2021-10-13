@@ -5,6 +5,9 @@ project(track-hat-driver-test-app
 # Set C++ 14 Standard
 set(CMAKE_CXX_STANDARD 14)
 
+include(${CMAKE_SOURCE_DIR}/src/CMakeSources.txt)
+include_directories(${TRACK_HAT_DRIVER_INCLUDES})
+
 # Set headers
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
@@ -12,12 +15,13 @@ include_directories(${CMAKE_SOURCE_DIR}/src)
 set(SOURCES
   track_hat_test_app.cpp)
 
+#message(FATAL_ERROR ${SOURCES})
 # Shared library target
 add_executable(
   track-hat-test
   ${SOURCES})
 
-# Link shared library
+## Link shared library
 target_link_libraries(
   track-hat-test
   PUBLIC track-hat)

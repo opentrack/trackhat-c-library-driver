@@ -26,16 +26,17 @@
 /* Structure for the last messages received from the TrackHat camera. */
 typedef struct
 {
-    MessageStatus      m_status;
-    MessageDeviceInfo  m_deviceInfo;
-    MessageCoordinates m_coordinates;
-    MessageNACK        m_nack;
-    uint8_t            m_lastACKTransactionId;
+    MessageStatus              m_status;
+    MessageDeviceInfo          m_deviceInfo;
+    MessageCoordinates         m_coordinates;
+    MessageNACK                m_nack;
+    MessageExtendedCoordinates m_extendedCoordinates;
+    uint8_t                    m_lastACKTransactionId;
 } trackHat_Messages_t;
 
 
 /* Structure for the data receiving thread. */
-typedef struct
+typedef struct trackHat_Thread_t
 {
     HANDLE  m_threadHandler = NULL;
     DWORD   m_threadID;
@@ -44,16 +45,17 @@ typedef struct
 
 
 /* Structure for the callback receiving thread. */
-typedef struct
+typedef struct trackHat_Callback_t
 {
     trackHat_Thread_t m_thread;
-    trackHat_PointsCallback_t m_function = nullptr;
+    trackHat_PointsCallback_t m_simplePointsCallbackFunction = nullptr;
+    trackHat_ExtendedPointsCallback_t m_extendedPointsCallbackFunction = nullptr;
     HANDLE m_mutex = nullptr;
 } trackHat_Callback_t;
 
 
 /* TrackHat device internal instance. */
-typedef struct
+typedef struct trackHat_Internal_t
 {
     usbSerial_t         m_serial;
     trackHat_Thread_t   m_receiver;
@@ -61,6 +63,7 @@ typedef struct
     trackHat_Messages_t m_messages;
     bool m_isOpen = false;
     bool m_isUnplugged = false;  /* Was connected, is disconnected */
+    TH_FrameType m_frameType;
 } trackHat_Internal_t;
 
 

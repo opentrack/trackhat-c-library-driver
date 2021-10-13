@@ -20,8 +20,14 @@ DWORD WINAPI trackHat_CallbackThreadFunction(LPVOID lpParameter);
 
 
 /* Run callback function with provided parameters */
-void trackHat_CallbackFunction(trackHat_PointsCallback_t callbackFunction, TH_ErrorCode errorCode,
+void trackHat_CallbackFunction(trackHat_PointsCallback_t callbackFunction,
+                               TH_ErrorCode errorCode,
                                const trackHat_Points_t* const points);
+
+/* Run callback function with provided parameters */
+void trackHat_CallbackFunction(trackHat_ExtendedPointsCallback_t callbackFunction,
+                               TH_ErrorCode errorCode,
+                               const trackHat_ExtendedPoints_t* const points);
 
 
 /* Handle the new message event */
@@ -37,7 +43,7 @@ TH_ErrorCode trackHat_UpdateInternalDeviceInfo(trackHat_Device_t* device);
 
 
 /* Start or stop sending coordinates from the TrackHat camera */
-TH_ErrorCode trackHat_EnableSendingCoordinates(trackHat_Device_t* device, bool enable);
+TH_ErrorCode trackHat_EnableSendingCoordinates(trackHat_Device_t* device, bool enable, TH_FrameType frameType);
 
 
 #endif //_TRACK_HAT_DRIVER_INTERNAL_H_
