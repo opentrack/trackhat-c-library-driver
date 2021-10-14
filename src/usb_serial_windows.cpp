@@ -33,7 +33,7 @@ namespace UsbSerial
         char szBuffer[1024] = { 0 };
 
         // Create device hardware id
-        sprintf(expectedDeviceIds, "VID_%04x&PID_%04x", vendorId, productId);
+        sprintf_s(expectedDeviceIds, "VID_%04x&PID_%04x", vendorId, productId);
 
         // SetupDiGetClassDevs returns a handle to a device information set
         deviceInfoSet = SetupDiGetClassDevs(NULL,
@@ -124,8 +124,6 @@ namespace UsbSerial
             return TH_ERROR_DEVICE_ALREADY_OPEN;
         }
 
-        BOOL status = FALSE;
-
         if (serial.m_comNumber == 0)
         {
             LOG_ERROR("Camera must be detected before connection.");
@@ -133,7 +131,7 @@ namespace UsbSerial
         }
 
         // "\\\\.\\COM1" is Windows format
-        sprintf(serial.m_comFileName, "\\\\.\\COM%d", serial.m_comNumber);
+        sprintf_s(serial.m_comFileName, "\\\\.\\COM%d", serial.m_comNumber);
 
         //Open the serial COM port
         serial.m_comHandler = CreateFile(serial.m_comFileName,         // COM friendly name
@@ -189,7 +187,7 @@ namespace UsbSerial
         //Writing data to Serial Port
         status = WriteFile(serial.m_comHandler, // Handle to the Serialport
                            buffer,              // Data to be written to the port
-                           size,                // No of bytes to write into the port
+                           static_cast<DWORD>(size),                // No of bytes to write into the port
                            &writtenSize,        // No of bytes written to the port
                            NULL);
         if (status == FALSE)
@@ -218,7 +216,7 @@ namespace UsbSerial
         DWORD readSize = 0;     // No of bytes read from the port
         BOOL status = FALSE;
 
-        status = ReadFile(serial.m_comHandler, buffer, maxSize, &readSize, NULL);
+        status = ReadFile(serial.m_comHandler, buffer, static_cast<DWORD>(maxSize), &readSize, NULL);
         if (status == FALSE)
         {
             //LOG_ERROR("Cannot receive data.");

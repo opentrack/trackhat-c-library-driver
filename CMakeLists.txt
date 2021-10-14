@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Set TrackHat library version
-set(LIBRARY_VERSION 0.1.1)
+set(LIBRARY_VERSION 0.2.0)
 
 project(track-hat-driver
     VERSION ${LIBRARY_VERSION})

@@ -11,7 +11,8 @@
 #include <stdint.h>
 #include <vector>
 
-namespace Parser {
+namespace Parser
+{
 
     /**
      * Create binary frame for GET_STATUS message.
@@ -41,7 +42,17 @@ namespace Parser {
      *
      * \return                       Size of the output message.
      */
-    size_t createMessageSetMode(uint8_t* message, bool coordinates);
+    size_t createMessageSetMode(uint8_t* message, bool coordinates, TH_FrameType frameType);
+
+    /**
+     * Create binary frame for SET_REGISTER message.
+     *
+     * \param[in/out]  message       Buffer to set the frame.
+     * \param[in]      setRegistr    Information about register to set
+     *
+     * \return                       Size of the output message.
+     */
+    size_t createMessageSetRegister(uint8_t* message, uint16_t bufferSize, trackHat_SetRegister_t* setRegister, uint8_t* messageTransactionID);
 
 
     /**
@@ -52,7 +63,6 @@ namespace Parser {
      *
      */
     void parseInputData(std::vector<uint8_t>& input, trackHat_Messages_t& messages);
-
 
     /**
     * Add CRC at the end of frame.
@@ -74,6 +84,10 @@ namespace Parser {
      *
      */
     bool checkCRC(std::vector<uint8_t>& buffer, size_t size);
+
+    void parseRawExtendedPointToHumanRedable(trackHat_ExtendedPointRaw_t& rawPoint, trackHat_ExtendedPoint_t& extendedPointsParsed);
+
+    void printExtendedPoint(trackHat_ExtendedPoint_t extendedPoint, int i);
 
 } // namespace Parser
 

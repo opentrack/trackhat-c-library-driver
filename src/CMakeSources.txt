@@ -1,4 +1,5 @@
 # Set sources for the library
+
 set(TRACK_HAT_DRIVER_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/logger.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/track_hat_driver.cpp
