@@ -96,7 +96,7 @@ TH_ErrorCode trackHat_waitForResponse(trackHat_Internal_t* internal, uint8_t tra
             return TH_FAILED_TO_SET_REGISTER;
         else if (messages->m_lastACKTransactionId >= transactionID)
             return TH_SUCCESS;
-        Sleep(50);
+        Sleep(1);
     }
 
 }
