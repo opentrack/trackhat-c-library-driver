@@ -9,7 +9,7 @@ include_directories(${TRACK_HAT_DRIVER_INCLUDES})
 # Shared library target
 add_library(
   track-hat
-  SHARED
+  STATIC
   ${TRACK_HAT_DRIVER_SOURCES})
 
 # Headers installation

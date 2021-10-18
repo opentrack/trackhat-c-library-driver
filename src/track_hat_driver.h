@@ -8,7 +8,7 @@
 
 /* Macro EXPORT_CPP export symbol to DLL. */
 #if defined(_WIN32)
-  #define EXPORT_API __declspec(dllexport)
+  #define EXPORT_API
 #else
   #error "Currently only Windows is supported."
 #endif
