@@ -17,13 +17,13 @@
 
 const size_t CAMERA_ERROR_CHECK_INTERVAL = 2;
 
-void trackHat_EnableDebugMode()
+void trackHat_EnableDebugMode(void)
 {
     logger_SetEnable(true);
 }
 
 
-void trackHat_DisableDebugMode()
+void trackHat_DisableDebugMode(void)
 {
     logger_SetEnable(false);
 }
