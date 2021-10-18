@@ -17,13 +17,13 @@
 
 const size_t CAMERA_ERROR_CHECK_INTERVAL = 2;
 
-void trackHat_EnableDebugMode()
+void trackHat_EnableDebugMode(void)
 {
     logger_SetEnable(true);
 }
 
 
-void trackHat_DisableDebugMode()
+void trackHat_DisableDebugMode(void)
 {
     logger_SetEnable(false);
 }
@@ -96,7 +96,7 @@ TH_ErrorCode trackHat_waitForResponse(trackHat_Internal_t* internal, uint8_t tra
             return TH_FAILED_TO_SET_REGISTER;
         else if (messages->m_lastACKTransactionId >= transactionID)
             return TH_SUCCESS;
-        Sleep(50);
+        Sleep(1);
     }
 
 }
@@ -159,12 +159,14 @@ TH_ErrorCode trackHat_Connect(trackHat_Device_t* device, TH_FrameType frameType)
     Sleep(50);  // Give 50 ms time to flush the buffers.
 
     // Update device info
+#if 0
     result = trackHat_UpdateInfo(device);
     if (result != TH_SUCCESS)
     {
         trackHat_Disconnect(device);
         return result;
     }
+#endif
 
     // Disable Idle mode
     result = trackHat_EnableSendingCoordinates(device, true, frameType);
@@ -814,5 +816,3 @@ TH_ErrorCode trackHat_SetRegisterValue(trackHat_Device_t* device, trackHat_SetRe
 
     return result;
 }
-
-

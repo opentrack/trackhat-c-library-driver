@@ -8,7 +8,7 @@
 
 /* Macro EXPORT_CPP export symbol to DLL. */
 #if defined(_WIN32)
-  #define EXPORT_API __declspec(dllexport)
+  #define EXPORT_API
 #else
   #error "Currently only Windows is supported."
 #endif
@@ -28,13 +28,13 @@
  * messages about the operation of the TrackHat library (disabled by default).
  */
 EXPORT_API
-void trackHat_EnableDebugMode();
+void trackHat_EnableDebugMode(void);
 
 /**
  * Disable the debugging mode of the library. 
  */
 EXPORT_API
-void trackHat_DisableDebugMode();
+void trackHat_DisableDebugMode(void);
 
 /**
  * Initialize structure 'track_hat_device_t'.
