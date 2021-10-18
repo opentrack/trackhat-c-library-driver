@@ -159,12 +159,14 @@ TH_ErrorCode trackHat_Connect(trackHat_Device_t* device, TH_FrameType frameType)
     Sleep(50);  // Give 50 ms time to flush the buffers.
 
     // Update device info
+#if 0
     result = trackHat_UpdateInfo(device);
     if (result != TH_SUCCESS)
     {
         trackHat_Disconnect(device);
         return result;
     }
+#endif
 
     // Disable Idle mode
     result = trackHat_EnableSendingCoordinates(device, true, frameType);
@@ -814,5 +816,3 @@ TH_ErrorCode trackHat_SetRegisterValue(trackHat_Device_t* device, trackHat_SetRe
 
     return result;
 }
-
-
