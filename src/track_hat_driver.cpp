@@ -14,6 +14,7 @@
 #include <string>
 #include <time.h>
 #include <vector>
+#include <chrono>
 
 const size_t CAMERA_ERROR_CHECK_INTERVAL = 2;
 
@@ -90,15 +91,19 @@ TH_ErrorCode trackHat_DetectDevice(trackHat_Device_t* device)
 TH_ErrorCode trackHat_waitForResponse(trackHat_Internal_t* internal, uint8_t transactionID)
 {
     trackHat_Messages_t* messages = &internal->m_messages;
-    while (1) // add timeout
-    {
+    std::chrono::high_resolution_clock clk;
+    auto start = clk.now();
+    using namespace std::chrono_literals;
+    constexpr auto timeout = 100ms;
+    do {
         if (messages->m_nack.m_transactionID == transactionID)
             return TH_FAILED_TO_SET_REGISTER;
         else if (messages->m_lastACKTransactionId >= transactionID)
             return TH_SUCCESS;
         Sleep(1);
-    }
+    } while (clk.now() - start <= timeout);
 
+    return TH_ERROR_DEVICE_COMUNICATION_TIMEOUT;
 }
 
 
