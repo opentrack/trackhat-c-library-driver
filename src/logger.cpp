@@ -10,7 +10,6 @@ static bool debugModeEnabled = false;
 
 const char logInfoPrefix[]  = "TrackHat INFO: ";
 const char logErrorPrefix[] = "TrackHat ERROR: ";
-const char logFunctionBadUse[] = "Bad use of the function.";
 
 void logger_SetEnable(bool enable)
 {

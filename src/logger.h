@@ -9,6 +9,7 @@
 #include <sstream>
 #include <iostream>
 
+#define logFunctionBadUse "Bad use of the function."
 
 extern const char logInfoPrefix[];
 extern const char logErrorPrefix[];
