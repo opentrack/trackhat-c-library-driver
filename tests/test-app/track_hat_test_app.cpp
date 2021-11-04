@@ -317,8 +317,7 @@ void printCoordinates(const trackHat_Points_t* const points)
             if (points->m_point[i].m_brightness > 0)
             {
                 printf("%d: X: %d    Y: %d\n", i,
-                    points->m_point[i].m_x, points->m_point[i].m_y,
-                    points->m_point[i].m_brightness);
+                    points->m_point[i].m_x, points->m_point[i].m_y);
             }
         }
         fflush(stdout);
@@ -335,7 +334,7 @@ void printCoordinates(const trackHat_ExtendedPoints_t* const points)
         {
             if (points->m_point[i].m_averageBrightness > 0)
             {
-                printf("%d: X: %d    Y: %d Area: %d\n", i,
+                printf("%d: X: %d    Y: %d Brightness: %d Area: %d\n", i,
                     points->m_point[i].m_coordinateX, points->m_point[i].m_coordinateY,
                     points->m_point[i].m_averageBrightness, points->m_point[i].m_area);
             }
