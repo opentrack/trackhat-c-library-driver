@@ -821,3 +821,8 @@ TH_ErrorCode trackHat_SetRegisterValue(trackHat_Device_t* device, trackHat_SetRe
 
     return result;
 }
+
+void trackHat_SetDebugHandler(TH_LogHandler_t fn)
+{
+    return logger_SetHandler(fn);
+}

@@ -137,6 +137,8 @@ TH_ErrorCode trackHat_RemoveCallback(trackHat_Device_t* device);
 EXPORT_API
 TH_ErrorCode trackHat_SetRegisterValue(trackHat_Device_t* device, trackHat_SetRegister_t* newRegisterValue);
 
+EXPORT_API
+void trackHat_SetDebugHandler(TH_LogHandler_t fn);
 
 #ifdef __cplusplus
   } // extern "C"

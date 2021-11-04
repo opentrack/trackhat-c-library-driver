@@ -10,6 +10,7 @@
 #include "track_hat_types_internal.h"
 
 #include <atomic>
+#include <iostream>
 
 /* Transaction ID counter is one for all library */
 static std::atomic<uint8_t> transactionID(255);
