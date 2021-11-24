@@ -6,37 +6,36 @@
 #ifndef _LOGGER_H_
 #define _LOGGER_H_
 
+#include <cstddef>
+#include <string>
 #include <sstream>
-#include <iostream>
 
+#define logFunctionBadUse "Bad use of the function."
+typedef void(*log_handler_t)(const char*, int, const char*, char, const char*, size_t);
 
-extern const char logInfoPrefix[];
-extern const char logErrorPrefix[];
-extern const char logFunctionBadUse[];
+#if defined _MSC_VER
+#   define LOG_FUNCTION __FUNCSIG__
+#else
+#   define LOG_FUNCTION __PRETTY_FUNCTION__
+#endif
 
-/* Log Message with Prefix */
-#define LOG(M, P)                          \
-    do {                                   \
-        if (logger_IsDebugModeEnabled())   \
-        {                                  \
-            std::stringstream stream;      \
-            stream << P;                   \
-            stream << M;                   \
-            stream << std::endl;           \
-            std::cout << stream.str();     \
-            std::cout.flush();             \
-        }                                  \
+#define LOG(L, M)                                                       \
+    do {                                                                \
+        if (logger_IsDebugModeEnabled())                                \
+            logger_LogLine(__FILE__, __LINE__, LOG_FUNCTION,            \
+                           (L), (std::stringstream() << M).str());      \
     } while (false)
 
-
-#define LOG_INFO(M)     LOG(M, logInfoPrefix)
-#define LOG_ERROR(M)    LOG(M, logErrorPrefix)
-
+#define LOG_INFO(...)  LOG('I', __VA_ARGS__)
+#define LOG_ERROR(...) LOG('E', __VA_ARGS__)
 
 /* Enable or disable debug messages on stdout */
 void logger_SetEnable(bool enable);
 
 /* Check if debug mode is enabled */
 bool logger_IsDebugModeEnabled();
+
+void logger_SetHandler(log_handler_t fn);
+void logger_LogLine(const char*, int, const char*, char, const std::string&);
 
 #endif //_LOGGER_H_

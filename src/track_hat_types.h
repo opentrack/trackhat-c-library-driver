@@ -132,6 +132,7 @@ typedef struct trackHat_SetRegister_t
     uint8_t m_registerValue;
 } trackHat_SetRegister_t;
 
+typedef void(*TH_LogHandler_t)(const char* file, int line, const char* function, char level, const char* msg, size_t len);
 
 #ifdef __cplusplus
   } // extern "C"
