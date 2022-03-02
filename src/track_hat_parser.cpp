@@ -61,6 +61,18 @@ namespace Parser
         appednCRC(message, messageLength);
         return messageLength;
     }
+    size_t createMessageSetLeds(uint8_t* message, trackHat_SetLeds_t* setLeds, uint8_t* messageTransactionID)
+    {
+        *messageTransactionID = transactionID;
+        message[0] = MessageID::ID_SET_LEDS;
+        message[1] = transactionID++;
+        message[2] = static_cast<uint8_t>(setLeds->ledBlueState);
+        message[3] = static_cast<uint8_t>(setLeds->ledRedState);
+        message[4] = static_cast<uint8_t>(setLeds->ledBlueState);
+        size_t messageLength = 5;
+        appednCRC(message, messageLength);
+        return messageLength;
+    }
 
     void parseMessageStatus(std::vector<uint8_t>& input, MessageStatus& status)
     {

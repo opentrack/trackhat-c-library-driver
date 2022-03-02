@@ -822,6 +822,33 @@ TH_ErrorCode trackHat_SetRegisterValue(trackHat_Device_t* device, trackHat_SetRe
     return result;
 }
 
+TH_ErrorCode trackHat_SetLeds(trackHat_Device_t* device, trackHat_SetLeds_t* newLedState)
+{
+    if ((device==nullptr) || (device->m_pInternal == nullptr))
+        return TH_ERROR_WRONG_PARAMETER;
+
+    trackHat_Internal_t* internal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    usbSerial_t& serial = internal->m_serial;
+
+    if (internal->m_isUnplugged)
+    {
+        return TH_ERROR_DEVICE_DISCONECTED;
+    }
+
+    uint8_t transactionID = 0;
+    uint8_t txMessage[MESSAGE_TX_BUFFER_SIZE] = {};
+    size_t  txMessageSize = Parser::createMessageSetLeds(txMessage, newLedState, &transactionID);
+    TH_ErrorCode result = UsbSerial::write(serial, txMessage, txMessageSize);
+    if (result != TH_SUCCESS)
+    {
+        return result;
+    }
+
+    result = trackHat_waitForResponse(internal, transactionID);
+
+    return result;
+}
+
 void trackHat_SetDebugHandler(TH_LogHandler_t fn)
 {
     return logger_SetHandler(fn);
