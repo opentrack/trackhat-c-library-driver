@@ -66,8 +66,8 @@ namespace Parser
         *messageTransactionID = transactionID;
         message[0] = MessageID::ID_SET_LEDS;
         message[1] = transactionID++;
-        message[2] = static_cast<uint8_t>(setLeds->ledBlueState);
-        message[3] = static_cast<uint8_t>(setLeds->ledRedState);
+        message[2] = static_cast<uint8_t>(setLeds->ledRedState);
+        message[3] = static_cast<uint8_t>(setLeds->ledGreenState);
         message[4] = static_cast<uint8_t>(setLeds->ledBlueState);
         size_t messageLength = 5;
         appednCRC(message, messageLength);

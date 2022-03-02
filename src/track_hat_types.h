@@ -143,8 +143,8 @@ typedef struct trackHat_SetRegister_t
 typedef struct trackHat_SetLeds_t
 {
     TH_LedState ledRedState;
-    TH_LedState ledBlueState;
     TH_LedState ledGreenState;
+    TH_LedState ledBlueState;
 
 } trackHat_SetLeds_t;
 

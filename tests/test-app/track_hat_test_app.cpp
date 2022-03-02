@@ -85,16 +85,22 @@ int main()
                 system("pause");
 
                 /*
+                 * Example how to set leds
+                 * */
+
+                trackHat_SetLeds_t setLeds = {TH_LedState::TH_OFF, TH_LedState::TH_BLINK, TH_LedState::TH_SOLID};
+                trackHat_SetLeds(&device, &setLeds);
+
+                /*
                  * Example how to set register
                  * 0X00 - register bank
                  * 0x19 - register address
                  * Register controls how many points are detected
                  * */
-                trackHat_SetLeds_t setLeds = {TH_LedState::TH_BLINK, TH_LedState::TH_BLINK, TH_LedState::TH_BLINK};
-                trackHat_SetLeds(&device, &setLeds);
                 trackHat_SetRegister_t registerValue = {0x00, 0x19, 0x03};
                 trackHat_SetRegisterValue(&device, &registerValue);
-                registerValue = {0x00, 0x19, 0x02};
+                registerValue = {0x00, 0x19
+                                 , 0x02};
                 trackHat_SetRegisterValue(&device, &registerValue);
                 registerValue = {0x00, 0x19, 0x01};
                 trackHat_SetRegisterValue(&device, &registerValue);
