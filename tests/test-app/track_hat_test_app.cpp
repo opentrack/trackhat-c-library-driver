@@ -99,8 +99,7 @@ int main()
                  * */
                 trackHat_SetRegister_t registerValue = {0x00, 0x19, 0x03};
                 trackHat_SetRegisterValue(&device, &registerValue);
-                registerValue = {0x00, 0x19
-                                 , 0x02};
+                registerValue = {0x00, 0x19, 0x02};
                 trackHat_SetRegisterValue(&device, &registerValue);
                 registerValue = {0x00, 0x19, 0x01};
                 trackHat_SetRegisterValue(&device, &registerValue);
