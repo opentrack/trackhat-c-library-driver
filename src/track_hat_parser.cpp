@@ -4,7 +4,6 @@
 //------------------------------------------------------
 
 #include "track_hat_parser.h"
-
 #include "crc.h"
 #include "logger.h"
 #include "track_hat_types_internal.h"
@@ -57,6 +56,18 @@ namespace Parser
         message[2] = static_cast<uint8_t>(setRegister->m_registerBank);
         message[3] = static_cast<uint8_t>(setRegister->m_registerAddress);
         message[4] = static_cast<uint8_t>(setRegister->m_registerValue);
+        size_t messageLength = 5;
+        appednCRC(message, messageLength);
+        return messageLength;
+    }
+    size_t createMessageEnableBootloader(uint8_t* message, uint16_t bufferSize, TH_BootloaderMode bootloaderMode, uint8_t* messageTransactionID)
+    {
+        if (bufferSize < 5)
+            return 0;
+        *messageTransactionID = transactionID;
+        message[0] = MessageID::ID_RESET_DEVICE;
+        message[1] = transactionID++;
+        message[2] = static_cast<uint8_t>(bootloaderMode);
         size_t messageLength = 5;
         appednCRC(message, messageLength);
         return messageLength;

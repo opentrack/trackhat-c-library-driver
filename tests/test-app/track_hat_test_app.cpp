@@ -90,6 +90,9 @@ int main()
                  * 0x19 - register address
                  * Register controls how many points are detected
                  * */
+                TH_BootloaderMode bootloaderMode = TH_BOOTLOADER_OFF;
+                trackHat_EnableBootloader(&device, bootloaderMode);
+
                 trackHat_SetRegister_t registerValue = {0x00, 0x19, 0x03};
                 trackHat_SetRegisterValue(&device, &registerValue);
                 registerValue = {0x00, 0x19, 0x02};

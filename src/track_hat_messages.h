@@ -19,6 +19,7 @@ enum MessageID : uint8_t
     ID_DEVICE_INFO          = 0x04,
     ID_SET_MODE             = 0x05,
     ID_SET_REGISTER_VALUE   = 0x06,
+    ID_RESET_DEVICE         = 0x09,
     ID_COORDINATE           = 0x0b,
     ID_EXTENDED_COORDINATES = 0x0c,
     ID_NACK                 = 0xff
