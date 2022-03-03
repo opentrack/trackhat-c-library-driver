@@ -4,6 +4,7 @@
 //------------------------------------------------------
 
 #include "track_hat_driver.h"
+#include "track_hat_types.h"
 
 #include <iostream>
 #include <signal.h>
@@ -24,6 +25,7 @@ bool runApplication = true;
 
 /* Raprot error if detected */
 bool errorDetected = false;
+
 
 /* Operate the TrackHat camera after initializ and connect */
 void useCoordinates(trackHat_Device_t* device);
@@ -90,8 +92,21 @@ int main()
                  * 0x19 - register address
                  * Register controls how many points are detected
                  * */
+
+                trackHat_SetRegisterGroup_t setRegisterGroup = {};
+                setRegisterGroup.setRegisterGroupValue[0] = {0x00, 0x19, 0x20};
+                setRegisterGroup.numberOfRegisters++;
+                setRegisterGroup.setRegisterGroupValue[1] = {0x00, 0x19, 0x20};
+                setRegisterGroup.numberOfRegisters++;
+                setRegisterGroup.setRegisterGroupValue[2] = {0x00, 0x19, 0x20};
+                setRegisterGroup.numberOfRegisters++;
+                setRegisterGroup.setRegisterGroupValue[3] = {0x00, 0x19, 0x20};
+                setRegisterGroup.numberOfRegisters++;
+                trackHat_SetRegisterGroupValue(&device, &setRegisterGroup);
+
                 trackHat_SetRegister_t registerValue = {0x00, 0x19, 0x03};
                 trackHat_SetRegisterValue(&device, &registerValue);
+
                 registerValue = {0x00, 0x19, 0x02};
                 trackHat_SetRegisterValue(&device, &registerValue);
                 registerValue = {0x00, 0x19, 0x01};

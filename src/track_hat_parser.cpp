@@ -61,6 +61,24 @@ namespace Parser
         appednCRC(message, messageLength);
         return messageLength;
     }
+    size_t createMessageSetRegisterGroup(uint8_t* message, uint16_t bufferSize, trackHat_SetRegisterGroup_t* setRegisterGroup, uint8_t* messageTransactionID)
+    {
+        if (bufferSize < 7)
+            return 0;
+        *messageTransactionID = transactionID;
+        message[0] = MessageID::ID_SET_REGISTER_VALUE;
+        message[1] = transactionID++;
+        message[2] = static_cast<uint8_t>(setRegisterGroup->numberOfRegisters);
+        for(uint8_t i = 0; i < setRegisterGroup->numberOfRegisters; i++)
+        {
+        message[3*i] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[i].m_registerBank);
+        message[3*i + 1] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[i].m_registerAddress);
+        message[3*i + 2] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[i].m_registerValue);
+        }
+        size_t messageLength = 1 + 1 + 1 + 3*setRegisterGroup->numberOfRegisters;
+        appednCRC(message, messageLength);
+        return messageLength;
+    }
 
     void parseMessageStatus(std::vector<uint8_t>& input, MessageStatus& status)
     {

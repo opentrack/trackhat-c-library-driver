@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 
+const size_t MAX_NUMBER_OF_REGISTERS = 19;
 
 /* TrackHat library error codes. */
 enum TH_ErrorCode
@@ -131,6 +132,35 @@ typedef struct trackHat_SetRegister_t
     uint8_t m_registerAddress;
     uint8_t m_registerValue;
 } trackHat_SetRegister_t;
+
+//typedef struct trackHat_SetRegisterGroup_t
+//{
+//    uint8_t m_registerBank;
+//    uint8_t m_registerAddress;
+//    uint8_t m_registerValue;
+//    bool m_isFilled = false;
+
+//    /**
+//     * @brief fill structure fields
+//     * @param registerBank
+//     * @param registerAddress
+//     * @param registerValue
+//     */
+//    void fill(uint8_t registerBank, uint8_t registerAddress, uint8_t registerValue)
+//    {
+//      m_registerBank = registerBank;
+//      m_registerAddress = registerAddress;
+//      m_registerValue = registerValue;
+//      m_isFilled = true;
+//    }
+//} trackHat_SetRegisterGroup_t;
+
+typedef struct trackHat_SetRegisterGroup_t
+{
+    trackHat_SetRegister_t setRegisterGroupValue[MAX_NUMBER_OF_REGISTERS];
+    size_t numberOfRegisters = 1;
+
+}trackHat_table_t;
 
 typedef void(*TH_LogHandler_t)(const char* file, int line, const char* function, char level, const char* msg, size_t len);
 

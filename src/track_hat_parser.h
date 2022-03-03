@@ -54,7 +54,16 @@ namespace Parser
      */
     size_t createMessageSetRegister(uint8_t* message, uint16_t bufferSize, trackHat_SetRegister_t* setRegister, uint8_t* messageTransactionID);
 
+    /**
+     * Create binary frame for SET_REGISTER_GROUP message.
+     *
+     * \param[in/out]  message       Buffer to set the frame.
+     * \param[in]      setRegistr    Information about register to set
+     *
+     * \return                       Size of the output message.
+     */
 
+    size_t createMessageSetRegisterGroup(uint8_t* message, uint16_t bufferSize, trackHat_SetRegisterGroup_t* setRegisterGroup, uint8_t* messageTransactionID);
     /**
      * Parse binary data na conver it to TrackHat messages.
      *
