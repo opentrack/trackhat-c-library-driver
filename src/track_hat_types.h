@@ -146,7 +146,7 @@ typedef struct trackHat_SetLeds_t
     TH_LedState ledGreenState;
     TH_LedState ledBlueState;
 
-} trackHat_SetLeds_t;
+}trackHat_SetLeds_t;
 
 typedef void(*TH_LogHandler_t)(const char* file, int line, const char* function, char level, const char* msg, size_t len);
 
