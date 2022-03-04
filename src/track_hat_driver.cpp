@@ -819,6 +819,7 @@ TH_ErrorCode trackHat_SetRegisterValue(trackHat_Device_t* device, trackHat_SetRe
 
     result = trackHat_waitForResponse(internal, transactionID);
 
+
     return result;
 }
 
@@ -845,6 +846,7 @@ TH_ErrorCode trackHat_SetRegisterGroupValue(trackHat_Device_t* device, trackHat_
     }
 
     result = trackHat_waitForResponse(internal, transactionID);
+
 
     return result;
 }

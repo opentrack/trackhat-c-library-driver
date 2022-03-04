@@ -96,12 +96,6 @@ int main()
                 trackHat_SetRegisterGroup_t setRegisterGroup = {};
                 setRegisterGroup.setRegisterGroupValue[0] = {0x00, 0x19, 0x20};
                 setRegisterGroup.numberOfRegisters++;
-                setRegisterGroup.setRegisterGroupValue[1] = {0x00, 0x19, 0x20};
-                setRegisterGroup.numberOfRegisters++;
-                setRegisterGroup.setRegisterGroupValue[2] = {0x00, 0x19, 0x20};
-                setRegisterGroup.numberOfRegisters++;
-                setRegisterGroup.setRegisterGroupValue[3] = {0x00, 0x19, 0x20};
-                setRegisterGroup.numberOfRegisters++;
                 trackHat_SetRegisterGroupValue(&device, &setRegisterGroup);
 
                 trackHat_SetRegister_t registerValue = {0x00, 0x19, 0x03};
