@@ -87,16 +87,48 @@ int main()
                 system("pause");
 
                 /*
+                 * Example how to set register group:
+                 * trackHat_SetRegisterGroup_t setRegisterGroup = {};
+                 *
+                 * setRegisterGroupValue(uint8_t registerBank, uint8_t registerAdress, uint8_t registerValue, trackHat_SetRegisterGroup_t& setRegisterGroup);
+                 * e.g: setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                 * 0X00 - register bank
+                 * 0x19 - register address
+                 * 0x02 - register value
+                 *
+                 * trackHat_SetRegisterGroupValue(&device, &setRegisterGroup);
+                 *
+                 * It's possible to set up to 19 registers
+                 * */
+
+                trackHat_SetRegisterGroup_t setRegisterGroup = {};
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                trackHat_SetRegisterGroupValue(&device, &setRegisterGroup);
+
+                /*
                  * Example how to set register
                  * 0X00 - register bank
                  * 0x19 - register address
                  * Register controls how many points are detected
                  * */
-
-                trackHat_SetRegisterGroup_t setRegisterGroup = {};
-                setRegisterGroup.setRegisterGroupValue[0] = {0x00, 0x19, 0x20};
-                setRegisterGroup.numberOfRegisters++;
-                trackHat_SetRegisterGroupValue(&device, &setRegisterGroup);
 
                 trackHat_SetRegister_t registerValue = {0x00, 0x19, 0x03};
                 trackHat_SetRegisterValue(&device, &registerValue);

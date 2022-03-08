@@ -140,6 +140,7 @@ TH_ErrorCode trackHat_SetRegisterGroupValue(trackHat_Device_t* device, trackHat_
 
 EXPORT_API
 void trackHat_SetDebugHandler(TH_LogHandler_t fn);
+void setRegisterGroupValue(uint8_t registerBank, uint8_t registerAdress, uint8_t registerValue, trackHat_SetRegisterGroup_t& setRegisterGroup);
 
 #ifdef __cplusplus
   } // extern "C"

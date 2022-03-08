@@ -5,6 +5,7 @@
 
 #include "track_hat_driver.h"
 #include "track_hat_driver_internal.h"
+#include "track_hat_types.h"
 
 #include "logger.h"
 #include "track_hat_parser.h"
@@ -854,4 +855,10 @@ TH_ErrorCode trackHat_SetRegisterGroupValue(trackHat_Device_t* device, trackHat_
 void trackHat_SetDebugHandler(TH_LogHandler_t fn)
 {
     return logger_SetHandler(fn);
+}
+
+void setRegisterGroupValue(uint8_t registerBank, uint8_t registerAdress, uint8_t registerValue, trackHat_SetRegisterGroup_t& setRegisterGroup)
+{
+    setRegisterGroup.setRegisterGroupValue[setRegisterGroup.numberOfRegisters] = {0x00, 0x19, 0x20};
+    setRegisterGroup.numberOfRegisters++;
 }
