@@ -85,6 +85,25 @@ int main()
                 system("pause");
 
                 /*
+                 * Example how to set leds
+                 * TH_LedState::TH_BLINK - red LED
+                 * TH_LedState::TH_OFF - green LED
+                 * TH_LedState::TH_SOLID - blue LED
+                 * */
+
+                trackHat_SetLeds_t setLeds = {TH_LedState::TH_BLINK, TH_LedState::TH_BLINK, TH_LedState::TH_BLINK};
+                trackHat_SetLeds_t setLeds2 = {TH_LedState::TH_SOLID, TH_LedState::TH_SOLID, TH_LedState::TH_SOLID};
+                trackHat_SetLeds_t setLeds3 = {TH_LedState::TH_OFF, TH_LedState::TH_OFF, TH_LedState::TH_OFF};
+                trackHat_SetLeds(&device, &setLeds);
+                Sleep(static_cast<time_t>(5000));
+                trackHat_SetLeds(&device, &setLeds2);
+                Sleep(static_cast<time_t>(5000));
+                trackHat_SetLeds(&device, &setLeds3);
+
+
+
+
+                /*
                  * Example how to set register
                  * 0X00 - register bank
                  * 0x19 - register address
@@ -100,6 +119,8 @@ int main()
 
                 // Disconnect from device
                 result = trackHat_Disconnect(&device);
+
+
                 if (result != TH_SUCCESS)
                 {
                     printf("Device not detected. Error %d\n", result);
@@ -151,10 +172,10 @@ void printTrackHatInfo(trackHat_Device_t* device)
         printf("TrackHat camera info:\n");
         printf("    Hardware ver. : r%d\n", device->m_hardwareVersion);
         printf("    Software ver. : %d.%d\n", device->m_softwareVersionMajor,
-                                              device->m_softwareVersionMinor);
+               device->m_softwareVersionMinor);
         printf("    Serial Number : %d\n", device->m_serialNumber);
-        printf("    Mode          : %s\n", (device->m_isIdleMode == true) ? 
-                                           "idle" : "sending coordinates" );
+        printf("    Mode          : %s\n", (device->m_isIdleMode == true) ?
+                   "idle" : "sending coordinates" );
         if (result == TH_SUCCESS)
             printf("    Uptime        : %d:%02d:%02d\n", hours, minutes, seconds);
         else
@@ -209,7 +230,7 @@ void useCoordinates(trackHat_Device_t* device)
     time(&currentTimeSec);
 
     while (1)//runApplication)
-    { 
+    {
         Sleep(static_cast<time_t>(timeoutSec * 1000));
 
 #if USE_EXTENDED_COORDINATES
@@ -317,7 +338,7 @@ void printCoordinates(const trackHat_Points_t* const points)
             if (points->m_point[i].m_brightness > 0)
             {
                 printf("%d: X: %d    Y: %d\n", i,
-                    points->m_point[i].m_x, points->m_point[i].m_y);
+                       points->m_point[i].m_x, points->m_point[i].m_y);
             }
         }
         fflush(stdout);
@@ -335,8 +356,8 @@ void printCoordinates(const trackHat_ExtendedPoints_t* const points)
             if (points->m_point[i].m_averageBrightness > 0)
             {
                 printf("%d: X: %d    Y: %d Brightness: %d Area: %d\n", i,
-                    points->m_point[i].m_coordinateX, points->m_point[i].m_coordinateY,
-                    points->m_point[i].m_averageBrightness, points->m_point[i].m_area);
+                       points->m_point[i].m_coordinateX, points->m_point[i].m_coordinateY,
+                       points->m_point[i].m_averageBrightness, points->m_point[i].m_area);
             }
         }
         fflush(stdout);
