@@ -91,8 +91,15 @@ int main()
                  * TH_LedState::TH_SOLID - blue LED
                  * */
 
-                trackHat_SetLeds_t setLeds = {TH_LedState::TH_BLINK, TH_LedState::TH_OFF, TH_LedState::TH_SOLID};
+                trackHat_SetLeds_t setLeds = {TH_LedState::TH_BLINK, TH_LedState::TH_BLINK, TH_LedState::TH_BLINK};
+                trackHat_SetLeds_t setLeds2 = {TH_LedState::TH_SOLID, TH_LedState::TH_SOLID, TH_LedState::TH_SOLID};
+                trackHat_SetLeds_t setLeds3 = {TH_LedState::TH_OFF, TH_LedState::TH_OFF, TH_LedState::TH_OFF};
                 trackHat_SetLeds(&device, &setLeds);
+                Sleep(static_cast<time_t>(5000));
+                trackHat_SetLeds(&device, &setLeds2);
+                Sleep(static_cast<time_t>(5000));
+                trackHat_SetLeds(&device, &setLeds3);
+
 
 
 
