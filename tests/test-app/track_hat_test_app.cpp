@@ -86,10 +86,15 @@ int main()
 
                 /*
                  * Example how to set leds
+                 * TH_LedState::TH_BLINK - red LED
+                 * TH_LedState::TH_OFF - green LED
+                 * TH_LedState::TH_SOLID - blue LED
                  * */
 
-                trackHat_SetLeds_t setLeds = {TH_LedState::TH_OFF, TH_LedState::TH_SOLID, TH_LedState::TH_BLINK};
+                trackHat_SetLeds_t setLeds = {TH_LedState::TH_BLINK, TH_LedState::TH_OFF, TH_LedState::TH_SOLID};
                 trackHat_SetLeds(&device, &setLeds);
+
+
 
                 /*
                  * Example how to set register
