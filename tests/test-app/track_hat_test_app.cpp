@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <time.h>
 #include <Windows.h>
+#include <string>
 
 
 /* Use callback to get the coordinates */
@@ -54,8 +55,29 @@ void signalHandler(int signal)
     }
 }
 
-int main()
+int main(int argc, char * argv[])
 {
+    const std::string HELP_OPTION = "--help";
+    if(argc == 2)
+    {
+        if(argv[1] == HELP_OPTION)
+        {
+            std::cout<<"Sample test application for TrackHat driver." << std::endl;
+            std::cout<<"This application can be used to connect PC with TrackHat Camera" << std::endl;
+            std::cout<<"using USB protocole based on TrackHat driver library." << std::endl;
+        }
+        else
+        {
+            std::cout<< "Error. Use --help to see all available options." << std::endl;
+            return -1;
+        }
+    }
+    else if(argc>2)
+    {
+        std::cout<< "Error. Use --help to see all available options." << std::endl;
+        return -1;
+    }
+
     trackHat_Device_t device;
     TH_ErrorCode result;
 
@@ -85,7 +107,6 @@ int main()
 
                 printf("TrackHat camera is readu for use.\n");
                 system("pause");
-
                 /*
                  * Example how to set register group:
                  * trackHat_SetRegisterGroup_t setRegisterGroup = {};
@@ -361,7 +382,6 @@ void printCoordinates(const trackHat_Points_t* const points)
                     points->m_point[i].m_x, points->m_point[i].m_y);
             }
         }
-        fflush(stdout);
     }
 }
 

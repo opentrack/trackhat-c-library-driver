@@ -859,6 +859,6 @@ void trackHat_SetDebugHandler(TH_LogHandler_t fn)
 
 void setRegisterGroupValue(uint8_t registerBank, uint8_t registerAdress, uint8_t registerValue, trackHat_SetRegisterGroup_t& setRegisterGroup)
 {
-    setRegisterGroup.setRegisterGroupValue[setRegisterGroup.numberOfRegisters] = {0x00, 0x19, 0x20};
+    setRegisterGroup.setRegisterGroupValue[setRegisterGroup.numberOfRegisters] = {registerBank, registerAdress, registerValue};
     setRegisterGroup.numberOfRegisters++;
 }

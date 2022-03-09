@@ -61,7 +61,8 @@ namespace Parser
         appednCRC(message, messageLength);
         return messageLength;
     }
-    size_t createMessageSetRegisterGroup(uint8_t* message, uint16_t bufferSize, trackHat_SetRegisterGroup_t* setRegisterGroup, uint8_t* messageTransactionID)
+    size_t createMessageSetRegisterGroup(uint8_t* message, uint16_t bufferSize, trackHat_SetRegisterGroup_t* setRegisterGroup,
+                                         uint8_t* messageTransactionID)
     {
         if (bufferSize < 8)
             return 0;
@@ -71,10 +72,10 @@ namespace Parser
         message[2] = static_cast<uint8_t>(setRegisterGroup->numberOfRegisters);
         for(uint8_t i = 0; i < setRegisterGroup->numberOfRegisters; i++)
         {
-        size_t indexOfCurrentRegister = 3 + (3*i);
-        message[indexOfCurrentRegister] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[0].m_registerBank);
-        message[indexOfCurrentRegister + 1] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[0].m_registerAddress);
-        message[indexOfCurrentRegister + 2] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[0].m_registerValue);
+            size_t indexOfCurrentRegister = 3 + (3*i);
+            message[indexOfCurrentRegister] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[0].m_registerBank);
+            message[indexOfCurrentRegister + 1] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[0].m_registerAddress);
+            message[indexOfCurrentRegister + 2] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[0].m_registerValue);
         }
         size_t messageLength = 1 + 1 + 1 + 3*setRegisterGroup->numberOfRegisters;
         appednCRC(message, messageLength);
