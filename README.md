@@ -12,8 +12,9 @@ To work with the library, the following components are required:
 
 ### Compilation
 
-TODO
-
-## Installation
-
-TODO
+This library can be compiled using:
+1. Qt creator:
+projects -> open -> CMakeLists 
+2. Using Natlive Tools Command Prompt for VS 2017:
+Go to project repository and use a command:
+scripts\build_all_windows.bat
