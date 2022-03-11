@@ -136,6 +136,7 @@ TH_ErrorCode trackHat_RemoveCallback(trackHat_Device_t* device);
  */
 EXPORT_API
 TH_ErrorCode trackHat_SetRegisterValue(trackHat_Device_t* device, trackHat_SetRegister_t* newRegisterValue);
+TH_ErrorCode trackHat_SetLeds(trackHat_Device_t* device, trackHat_SetLeds_t* newLedState);
 TH_ErrorCode trackHat_EnableBootloader(trackHat_Device_t* device, TH_BootloaderMode bootloaderMode);
 EXPORT_API
 void trackHat_SetDebugHandler(TH_LogHandler_t fn);
