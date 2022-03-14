@@ -4,11 +4,13 @@
 //------------------------------------------------------
 
 #include "track_hat_driver.h"
+#include "track_hat_types.h"
 
 #include <iostream>
 #include <signal.h>
 #include <time.h>
 #include <Windows.h>
+#include <string>
 
 
 /* Use callback to get the coordinates */
@@ -24,6 +26,7 @@ bool runApplication = true;
 
 /* Raprot error if detected */
 bool errorDetected = false;
+
 
 /* Operate the TrackHat camera after initializ and connect */
 void useCoordinates(trackHat_Device_t* device);
@@ -52,8 +55,29 @@ void signalHandler(int signal)
     }
 }
 
-int main()
+int main(int argc, char * argv[])
 {
+    const std::string HELP_OPTION = "--help";
+    if(argc == 2)
+    {
+        if(argv[1] == HELP_OPTION)
+        {
+            std::cout<<"Sample test application for TrackHat driver." << std::endl;
+            std::cout<<"This application can be used to connect PC with TrackHat Camera" << std::endl;
+            std::cout<<"using USB protocole based on TrackHat driver library." << std::endl;
+        }
+        else
+        {
+            std::cout<< "Error. Use --help to see all available options." << std::endl;
+            return -1;
+        }
+    }
+    else if(argc>2)
+    {
+        std::cout<< "Error. Use --help to see all available options." << std::endl;
+        return -1;
+    }
+
     trackHat_Device_t device;
     TH_ErrorCode result;
 
@@ -83,9 +107,47 @@ int main()
 
                 printf("TrackHat camera is readu for use.\n");
                 system("pause");
+                /*
+                 * Example how to set register group:
+                 * trackHat_SetRegisterGroup_t setRegisterGroup = {};
+                 *
+                 * setRegisterGroupValue(uint8_t registerBank, uint8_t registerAdress, uint8_t registerValue, trackHat_SetRegisterGroup_t& setRegisterGroup);
+                 * e.g: setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                 * 0X00 - register bank
+                 * 0x19 - register address
+                 * 0x02 - register value
+                 *
+                 * trackHat_SetRegisterGroupValue(&device, &setRegisterGroup);
+                 *
+                 * It's possible to set up to 19 registers
+                 * */
+
+                trackHat_SetRegisterGroup_t setRegisterGroup = {};
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
+                trackHat_SetRegisterGroupValue(&device, &setRegisterGroup);
 
                 /*
                  * Example how to set leds
+                 *
+                 *
                  * TH_LedState::TH_BLINK - red LED
                  * TH_LedState::TH_OFF - green LED
                  * TH_LedState::TH_SOLID - blue LED
@@ -100,17 +162,16 @@ int main()
                 Sleep(static_cast<time_t>(5000));
                 trackHat_SetLeds(&device, &setLeds3);
 
-
-
-
                 /*
                  * Example how to set register
                  * 0X00 - register bank
                  * 0x19 - register address
                  * Register controls how many points are detected
                  * */
+
                 trackHat_SetRegister_t registerValue = {0x00, 0x19, 0x03};
                 trackHat_SetRegisterValue(&device, &registerValue);
+
                 registerValue = {0x00, 0x19, 0x02};
                 trackHat_SetRegisterValue(&device, &registerValue);
                 registerValue = {0x00, 0x19, 0x01};
@@ -341,7 +402,6 @@ void printCoordinates(const trackHat_Points_t* const points)
                        points->m_point[i].m_x, points->m_point[i].m_y);
             }
         }
-        fflush(stdout);
     }
 }
 

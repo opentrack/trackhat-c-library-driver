@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 
+const size_t MAX_NUMBER_OF_REGISTERS = 19;
 
 /* TrackHat library error codes. */
 enum TH_ErrorCode
@@ -140,14 +141,20 @@ typedef struct trackHat_SetRegister_t
     uint8_t m_registerValue;
 } trackHat_SetRegister_t;
 
+typedef struct trackHat_SetRegisterGroup_t
+{
+    trackHat_SetRegister_t setRegisterGroupValue[MAX_NUMBER_OF_REGISTERS];
+    size_t numberOfRegisters = 0;
+
+} trackHat_SetRegisterGroup_t;
+
 typedef struct trackHat_SetLeds_t
 {
     TH_LedState ledRedState;
     TH_LedState ledGreenState;
     TH_LedState ledBlueState;
 
-}trackHat_SetLeds_t;
-
+} trackHat_SetLeds_t;
 typedef void(*TH_LogHandler_t)(const char* file, int line, const char* function, char level, const char* msg, size_t len);
 
 #ifdef __cplusplus

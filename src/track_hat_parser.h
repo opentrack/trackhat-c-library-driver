@@ -53,7 +53,18 @@ namespace Parser
      * \return                       Size of the output message.
      */
     size_t createMessageSetRegister(uint8_t* message, uint16_t bufferSize, trackHat_SetRegister_t* setRegister, uint8_t* messageTransactionID);
+
     /**
+     * Create binary frame for SET_REGISTER_GROUP message.
+     *
+     * \param[in/out]  message       Buffer to set the frame.
+     * \param[in]      setRegistr    Information about register to set
+     *
+     * \return                       Size of the output message.
+     */
+
+    size_t createMessageSetRegisterGroup(uint8_t* message, uint16_t bufferSize, trackHat_SetRegisterGroup_t* setRegisterGroup, uint8_t* messageTransactionID);
+ /**
      * Create binary frame for SET_LEDS message.
      *
      * \param[in/out]  message       Buffer to set the frame.
@@ -63,7 +74,7 @@ namespace Parser
      */
     size_t createMessageSetLeds(uint8_t* message, trackHat_SetLeds_t* setLeds, uint8_t *messageTransactionID);
 
-    /**
+   /**
      * Parse binary data na conver it to TrackHat messages.
      *
      * \param[in/out] input        Vector of the data to parse. The parsed bytes are deleted.
