@@ -40,6 +40,14 @@ enum TH_FrameType
     TH_FRAME_EXTENDED = 1,
 };
 
+enum TH_LedState
+{
+    TH_UNCHANGED = 0,
+    TH_OFF = 1,
+    TH_BLINK = 2,
+    TH_SOLID = 3,
+};
+
 /* Maximum number of points detected by TrackHat camera. */
 #define TRACK_HAT_NUMBER_OF_POINTS 16
 
@@ -138,8 +146,15 @@ typedef struct trackHat_SetRegisterGroup_t
     trackHat_SetRegister_t setRegisterGroupValue[MAX_NUMBER_OF_REGISTERS];
     size_t numberOfRegisters = 0;
 
-}trackHat_SetRegisterGroup_t;
+} trackHat_SetRegisterGroup_t;
 
+typedef struct trackHat_SetLeds_t
+{
+    TH_LedState ledRedState;
+    TH_LedState ledGreenState;
+    TH_LedState ledBlueState;
+
+} trackHat_SetLeds_t;
 typedef void(*TH_LogHandler_t)(const char* file, int line, const char* function, char level, const char* msg, size_t len);
 
 #ifdef __cplusplus
