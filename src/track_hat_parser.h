@@ -53,7 +53,6 @@ namespace Parser
      * \return                       Size of the output message.
      */
     size_t createMessageSetRegister(uint8_t* message, uint16_t bufferSize, trackHat_SetRegister_t* setRegister, uint8_t* messageTransactionID);
-==== BASE ====
 
     /**
      * Create binary frame for SET_REGISTER_GROUP message.

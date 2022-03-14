@@ -146,6 +146,8 @@ int main(int argc, char * argv[])
 
                 /*
                  * Example how to set leds
+                 *
+                 *
                  * TH_LedState::TH_BLINK - red LED
                  * TH_LedState::TH_OFF - green LED
                  * TH_LedState::TH_SOLID - blue LED
@@ -159,9 +161,6 @@ int main(int argc, char * argv[])
                 trackHat_SetLeds(&device, &setLeds2);
                 Sleep(static_cast<time_t>(5000));
                 trackHat_SetLeds(&device, &setLeds3);
-
-
-
 
                 /*
                  * Example how to set register
