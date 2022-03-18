@@ -1,3 +1,4 @@
+
 // File:   track_hat_test_app.cpp
 // Brief:  Sample test application for TrackHat driver
 // Author: Piotr Nowicki <piotr.nowicki@wizzdev.pl>
@@ -131,7 +132,7 @@ int main(int argc, char* argv[])
     // Camera is ready for use
     printTrackHatInfo(&device);
 
-    printf("TrackHat camera is readu for use.\n");
+    printf("TrackHat camera is ready for use.\n");
     system("pause");
 
     /*
@@ -154,14 +155,13 @@ int main(int argc, char* argv[])
     {
         setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
     }
-
     const auto time1 = std::chrono::system_clock::now();
-    for(int i = 0; i <= 3; i++)
+    for(int i = 0; i <= 60; i++)
     {
         result = trackHat_SetRegisterGroupValue(&device, &setRegisterGroup);
         if (result != TH_SUCCESS)
         {
-            printf("Sending register group failed");
+            printf("Sending register group failed/n");
         }
         else
         {
@@ -180,14 +180,14 @@ int main(int argc, char* argv[])
      * TH_LedState::TH_OFF - green LED
      * TH_LedState::TH_SOLID - blue LED
      * */
-//    trackHat_SetLeds_t setLedsBlinking = {TH_LedState::TH_BLINK, TH_LedState::TH_BLINK, TH_LedState::TH_BLINK};
-//    trackHat_SetLeds_t setLedsSolid = {TH_LedState::TH_SOLID, TH_LedState::TH_SOLID, TH_LedState::TH_SOLID};
-//    trackHat_SetLeds_t setLedsOff = {TH_LedState::TH_OFF, TH_LedState::TH_OFF, TH_LedState::TH_OFF};
-//    trackHat_SetLeds(&device, &setLedsBlinking);
-//    Sleep(static_cast<time_t>(5000));
-//    trackHat_SetLeds(&device, &setLedsSolid);
-//    Sleep(static_cast<time_t>(5000));
-//    trackHat_SetLeds(&device, &setLedsOff);
+    trackHat_SetLeds_t setLedsBlinking = {TH_LedState::TH_BLINK, TH_LedState::TH_BLINK, TH_LedState::TH_BLINK};
+    trackHat_SetLeds_t setLedsSolid = {TH_LedState::TH_SOLID, TH_LedState::TH_SOLID, TH_LedState::TH_SOLID};
+    trackHat_SetLeds_t setLedsOff = {TH_LedState::TH_OFF, TH_LedState::TH_OFF, TH_LedState::TH_OFF};
+    trackHat_SetLeds(&device, &setLedsBlinking);
+    Sleep(static_cast<time_t>(5000));
+    trackHat_SetLeds(&device, &setLedsSolid);
+    Sleep(static_cast<time_t>(5000));
+    trackHat_SetLeds(&device, &setLedsOff);
 
     /*
      * Example how to set register
@@ -237,7 +237,7 @@ void printTrackHatInfo(trackHat_Device_t* device)
         minutes %= 60;
 
         printf("TrackHat camera info:\n");
-        printf("    Hardware ver. : r%d\n", device->m_hardwareVersion);
+        printf("    Hardware ver. : HV%d\n", device->m_hardwareVersion);
         printf("    Software ver. : %d.%d\n", device->m_softwareVersionMajor,
                device->m_softwareVersionMinor);
         printf("    Serial Number : %d\n", device->m_serialNumber);
