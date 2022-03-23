@@ -35,7 +35,7 @@ TH_ErrorCode trackHat_Initialize(trackHat_Device_t* device)
 {
     LOG_INFO("Structure initialization.");
 
-    memset(device, 0, sizeof(trackHat_Device_t));
+    ::memset(device, 0, sizeof(trackHat_Device_t));
 
     device->m_pInternal = new trackHat_Internal_t();
     if (device->m_pInternal == nullptr)
@@ -54,14 +54,14 @@ void trackHat_Deinitialize(trackHat_Device_t* device)
 
     if (device->m_pInternal != nullptr)
     {
-        trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
-        if (internal.m_receiver.m_threadHandler != nullptr)
+        trackHat_Internal_t* pInternal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+        if (pInternal->m_receiver.m_threadHandler != nullptr)
         {
             trackHat_Disconnect(device);
         }
-        delete device->m_pInternal;
+        delete pInternal;
     }
-    memset(device, 0, sizeof(trackHat_Device_t));
+    ::memset(device, 0, sizeof(trackHat_Device_t));
 }
 
 
@@ -75,8 +75,8 @@ TH_ErrorCode trackHat_DetectDevice(trackHat_Device_t* device)
         return TH_ERROR_WRONG_PARAMETER;
     }
 
-    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
-    usbSerial_t& serial = internal.m_serial;
+    trackHat_Internal_t* pInternal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    usbSerial_t& serial = pInternal->m_serial;
     serial.m_comNumber = UsbSerial::getComPort(TRACK_HAT_USB_VENDOR_ID, TRACK_HAT_USB_PRODUCT_ID);
 
     if (serial.m_comNumber == 0)
@@ -89,20 +89,29 @@ TH_ErrorCode trackHat_DetectDevice(trackHat_Device_t* device)
     return TH_SUCCESS;
 }
 
-TH_ErrorCode trackHat_waitForResponse(trackHat_Internal_t* internal, uint8_t transactionID)
+TH_ErrorCode trackHat_waitForResponse(trackHat_Internal_t* pInternal, uint8_t transactionID)
 {
-    trackHat_Messages_t* messages = &internal->m_messages;
+    trackHat_Messages_t* messages = &pInternal->m_messages;
     std::chrono::high_resolution_clock clk;
-    auto start = clk.now();
-    using namespace std::chrono_literals;
-    constexpr auto timeout = 100ms;
-    do {
+    const auto START = clk.now();
+    const auto TIMEOUT = std::chrono::milliseconds(100);
+    do
+    {
         if (messages->m_nack.m_transactionID == transactionID)
+        {
             return TH_FAILED_TO_SET_REGISTER;
+        }
         else if (messages->m_lastACKTransactionId >= transactionID)
+        {
             return TH_SUCCESS;
+        }
+        else
+        {
+            // do nothing
+        }
+
         Sleep(1);
-    } while (clk.now() - start <= timeout);
+    } while (clk.now() - START <= TIMEOUT);
 
     return TH_ERROR_DEVICE_COMUNICATION_TIMEOUT;
 }
@@ -118,13 +127,14 @@ TH_ErrorCode trackHat_Connect(trackHat_Device_t* device, TH_FrameType frameType)
         return TH_ERROR_WRONG_PARAMETER;
     }
 
-    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
-    trackHat_Thread_t& receiverThread = internal.m_receiver;
-    trackHat_Thread_t& callbackThread = internal.m_callback.m_thread;
-    usbSerial_t& serial = internal.m_serial;
+    trackHat_Internal_t* pInternal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    trackHat_Thread_t& receiverThread = pInternal->m_receiver;
+    trackHat_Thread_t& callbackThread = pInternal->m_callback.m_thread;
+    usbSerial_t& serial = pInternal->m_serial;
 
-    if (internal.m_isOpen == true)
+    if (pInternal->m_isOpen)
     {
+        LOG_ERROR("ERROR: Device already opened");
         return TH_ERROR_DEVICE_ALREADY_OPEN;
     }
 
@@ -137,13 +147,16 @@ TH_ErrorCode trackHat_Connect(trackHat_Device_t* device, TH_FrameType frameType)
     TH_ErrorCode result = UsbSerial::open(serial);
     if (result != TH_SUCCESS)
     {
+        LOG_ERROR("ERROR: Unable to open device");
         return result;
     }
-    internal.m_isUnplugged = false;
+
+    pInternal->m_isUnplugged = false;
 
     // Start receiving thread
     receiverThread.m_isRunning = true;
-    receiverThread.m_threadHandler = CreateThread(0, 0, trackHat_ReceiverThreadFunction, &internal, 0, &receiverThread.m_threadID);
+    receiverThread.m_threadHandler =
+        ::CreateThread(0, 0, trackHat_ReceiverThreadFunction, pInternal, 0, &receiverThread.m_threadID);
     if (receiverThread.m_threadHandler == nullptr)
     {
         LOG_ERROR("Cannot start rceiving. Error " << GetLastError() <<".");
@@ -153,16 +166,18 @@ TH_ErrorCode trackHat_Connect(trackHat_Device_t* device, TH_FrameType frameType)
 
     // Start callback thread
     callbackThread.m_isRunning = true;
-    callbackThread.m_threadHandler = CreateThread(0, 0, trackHat_CallbackThreadFunction, &internal, 0, &callbackThread.m_threadID);
+    callbackThread.m_threadHandler =
+        ::CreateThread(0, 0, trackHat_CallbackThreadFunction, pInternal, 0, &callbackThread.m_threadID);
     if (callbackThread.m_threadHandler == nullptr)
     {
         LOG_ERROR("Cannot start callback system. Error " << GetLastError() << ".");
         trackHat_Disconnect(device);
         return TH_ERROR_WRONG_PARAMETER;
     }
-    internal.m_callback.m_mutex = CreateMutex(NULL, false, NULL);
 
-    Sleep(50);  // Give 50 ms time to flush the buffers.
+    pInternal->m_callback.m_mutex = ::CreateMutex(NULL, false, NULL);
+
+    ::Sleep(50);  // Give 50 ms time to flush the buffers.
 
     // Update device info
 #if 0
@@ -178,11 +193,12 @@ TH_ErrorCode trackHat_Connect(trackHat_Device_t* device, TH_FrameType frameType)
     result = trackHat_EnableSendingCoordinates(device, true, frameType);
     if (result != TH_SUCCESS)
     {
+        LOG_ERROR("ERROR: Failure to enable sending of coordinates");
         trackHat_Disconnect(device);
         return result;
     }
 
-    internal.m_isOpen = true;
+    pInternal->m_isOpen = true;
     return TH_SUCCESS;
 }
 
@@ -197,13 +213,14 @@ TH_ErrorCode trackHat_Disconnect(trackHat_Device_t* device)
         return TH_ERROR_WRONG_PARAMETER;
     }
 
-    trackHat_Internal_t* internal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
-    trackHat_Thread_t& callbackThread = internal->m_callback.m_thread;
-    trackHat_Thread_t& receiverThread = internal->m_receiver;
-    usbSerial_t& serial = internal->m_serial;
+    trackHat_Internal_t* pInternal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    trackHat_Thread_t& callbackThread = pInternal->m_callback.m_thread;
+    trackHat_Thread_t& receiverThread = pInternal->m_receiver;
+    usbSerial_t& serial = pInternal->m_serial;
 
     if (serial.m_isPortOpen)
     {
+        // TODO error handling check if error reported, continue
         // Enable Idle mode
         trackHat_EnableSendingCoordinates(device, false, TH_FRAME_BASIC);
     }
@@ -212,8 +229,8 @@ TH_ErrorCode trackHat_Disconnect(trackHat_Device_t* device)
     receiverThread.m_isRunning = false;
     if (receiverThread.m_threadHandler != nullptr)
     {
-        WaitForSingleObject(receiverThread.m_threadHandler, MESSAGE_EVENT_TIMEOUT_MS);
-        CloseHandle(receiverThread.m_threadHandler);
+        ::WaitForSingleObject(receiverThread.m_threadHandler, MESSAGE_EVENT_TIMEOUT_MS);
+        ::CloseHandle(receiverThread.m_threadHandler);
         receiverThread.m_threadHandler = nullptr;
         receiverThread.m_threadID = 0;
     }
@@ -222,18 +239,19 @@ TH_ErrorCode trackHat_Disconnect(trackHat_Device_t* device)
     callbackThread.m_isRunning = false;
     if (callbackThread.m_threadHandler != nullptr)
     {
-        WaitForSingleObject(callbackThread.m_threadHandler, MESSAGE_EVENT_TIMEOUT_MS);
-        CloseHandle(callbackThread.m_threadHandler);
+        ::WaitForSingleObject(callbackThread.m_threadHandler, MESSAGE_EVENT_TIMEOUT_MS);
+        ::CloseHandle(callbackThread.m_threadHandler);
         callbackThread.m_threadHandler = nullptr;
         callbackThread.m_threadID = 0;
     }
-    if (internal->m_callback.m_mutex != nullptr)
+
+    if (pInternal->m_callback.m_mutex != nullptr)
     {
-        CloseHandle(internal->m_callback.m_mutex);
-        internal->m_callback.m_mutex = nullptr;
+        ::CloseHandle(pInternal->m_callback.m_mutex);
+        pInternal->m_callback.m_mutex = nullptr;
     }
 
-    internal->m_isOpen = false;
+    pInternal->m_isOpen = false;
     return UsbSerial::close(serial);
 }
 
@@ -243,8 +261,8 @@ TH_ErrorCode trackHat_UpdateInfo(trackHat_Device_t* device)
     if ((device==nullptr) || (device->m_pInternal == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
 
-    trackHat_Internal_t* internal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
-    if (internal->m_isUnplugged)
+    trackHat_Internal_t* pInternal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    if (pInternal->m_isUnplugged)
     {
         return TH_ERROR_DEVICE_DISCONECTED;
     }
@@ -253,13 +271,12 @@ TH_ErrorCode trackHat_UpdateInfo(trackHat_Device_t* device)
 
     // Update DeviceInfo
     TH_ErrorCode result = trackHat_UpdateInternalDeviceInfo(device);
-    if (result == TH_SUCCESS)
+    if (result != TH_SUCCESS)
     {
-        // Update Status
-        result = trackHat_UpdateInternalStatus(device);
+        return result;
     }
-
-    return result;
+    //TODO add error reporting
+    return trackHat_UpdateInternalStatus(device);
 }
 
 
@@ -268,11 +285,11 @@ TH_ErrorCode trackHat_UpdateInternalStatus(trackHat_Device_t* device)
     if ((device == nullptr) || (device->m_pInternal == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
 
-    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
-    MessageStatus& messageStatus = internal.m_messages.m_status;
-    usbSerial_t& serial = internal.m_serial;
+    trackHat_Internal_t* pInternal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    MessageStatus& messageStatus = pInternal->m_messages.m_status;
+    usbSerial_t& serial = pInternal->m_serial;
 
-    if (internal.m_isUnplugged)
+    if (pInternal->m_isUnplugged)
     {
         return TH_ERROR_DEVICE_DISCONECTED;
     }
@@ -280,11 +297,11 @@ TH_ErrorCode trackHat_UpdateInternalStatus(trackHat_Device_t* device)
     //LOG_INFO("Update internal status.");
 
     uint8_t txMessage[MESSAGE_TX_BUFFER_SIZE];
-    size_t  txMessageSize = Parser::createMessageGetStatus(txMessage);
+    size_t txMessageSize = Parser::createMessageGetStatus(txMessage);
 
     // Update Status
 
-    ResetEvent(messageStatus.m_newMessageEvent);
+    ::ResetEvent(messageStatus.m_newMessageEvent);
     TH_ErrorCode result = UsbSerial::write(serial, txMessage, txMessageSize);
     if (result != TH_SUCCESS)
     {
@@ -297,10 +314,10 @@ TH_ErrorCode trackHat_UpdateInternalStatus(trackHat_Device_t* device)
         return result;
     }
 
-    WaitForSingleObject(messageStatus.m_mutex, INFINITE);
+    ::WaitForSingleObject(messageStatus.m_mutex, INFINITE);
     CameraStatus cameraStatus = messageStatus.m_camStatus;
-    device->m_isIdleMode = messageStatus.m_camMode == CameraMode::CAM_IDLE;
-    ReleaseMutex(messageStatus.m_mutex);
+    device->m_isIdleMode = (messageStatus.m_camMode == CameraMode::CAM_IDLE);
+    ::ReleaseMutex(messageStatus.m_mutex);
 
     switch (cameraStatus)
     {
@@ -338,11 +355,11 @@ TH_ErrorCode trackHat_UpdateInternalDeviceInfo(trackHat_Device_t* device)
     if ((device == nullptr) || (device->m_pInternal == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
 
-    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
-    MessageDeviceInfo& messageDeviceInfo = internal.m_messages.m_deviceInfo;
-    usbSerial_t& serial = internal.m_serial;
+    trackHat_Internal_t* pInternal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    MessageDeviceInfo& messageDeviceInfo = pInternal->m_messages.m_deviceInfo;
+    usbSerial_t& serial = pInternal->m_serial;
 
-    if (internal.m_isUnplugged)
+    if (pInternal->m_isUnplugged)
     {
         return TH_ERROR_DEVICE_DISCONECTED;
     }
@@ -352,7 +369,7 @@ TH_ErrorCode trackHat_UpdateInternalDeviceInfo(trackHat_Device_t* device)
     uint8_t txMessage[MESSAGE_TX_BUFFER_SIZE];
     size_t txMessageSize = Parser::createMessageGetDeviceInfo(txMessage);
 
-    ResetEvent(messageDeviceInfo.m_newMessageEvent);
+    ::ResetEvent(messageDeviceInfo.m_newMessageEvent);
     TH_ErrorCode result = UsbSerial::write(serial, txMessage, txMessageSize);
     if (result != TH_SUCCESS)
     {
@@ -365,12 +382,12 @@ TH_ErrorCode trackHat_UpdateInternalDeviceInfo(trackHat_Device_t* device)
         return result;
     }
 
-    WaitForSingleObject(messageDeviceInfo.m_mutex, INFINITE);
+    ::WaitForSingleObject(messageDeviceInfo.m_mutex, INFINITE);
     device->m_hardwareVersion = messageDeviceInfo.m_hardwareVersion;
     device->m_softwareVersionMajor = messageDeviceInfo.m_softwareVersionMajor;
     device->m_softwareVersionMinor = messageDeviceInfo.m_softwareVersionMinor;
     device->m_serialNumber = messageDeviceInfo.m_serialNumber;
-    ReleaseMutex(messageDeviceInfo.m_mutex);
+    ::ReleaseMutex(messageDeviceInfo.m_mutex);
 
     return TH_SUCCESS;
 }
@@ -381,11 +398,11 @@ TH_ErrorCode trackHat_EnableSendingCoordinates(trackHat_Device_t* device, bool e
     if ((device == nullptr) || (device->m_pInternal == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
 
-    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
-    usbSerial_t& serial = internal.m_serial;
-    internal.m_frameType = frameType;
+    trackHat_Internal_t* pInternal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    usbSerial_t& serial = pInternal->m_serial;
+    pInternal->m_frameType = frameType;
 
-    if (internal.m_isUnplugged)
+    if (pInternal->m_isUnplugged)
     {
         return TH_ERROR_DEVICE_DISCONECTED;
     }
@@ -393,7 +410,7 @@ TH_ErrorCode trackHat_EnableSendingCoordinates(trackHat_Device_t* device, bool e
     LOG_INFO((enable ? "Enable" : "Disable") << " sending of the coordinates.");
 
     uint8_t txMessage[MESSAGE_TX_BUFFER_SIZE];
-    size_t  txMessageSize = Parser::createMessageSetMode(txMessage, enable, frameType);
+    size_t txMessageSize = Parser::createMessageSetMode(txMessage, enable, frameType);
 
     TH_ErrorCode result = UsbSerial::write(serial, txMessage, txMessageSize);
     if (result != TH_SUCCESS)
@@ -423,9 +440,9 @@ TH_ErrorCode trackHat_GetUptime(trackHat_Device_t* device, uint32_t* seconds)
     if ((device == nullptr) || (device->m_pInternal == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
 
-    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    trackHat_Internal_t* pInternal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
 
-    if (internal.m_isUnplugged)
+    if (pInternal->m_isUnplugged)
     {
         return TH_ERROR_DEVICE_DISCONECTED;
     }
@@ -439,7 +456,7 @@ TH_ErrorCode trackHat_GetUptime(trackHat_Device_t* device, uint32_t* seconds)
         return result;
     }
 
-    *seconds = internal.m_messages.m_status.m_uptimeInSec;
+    *seconds = pInternal->m_messages.m_status.m_uptimeInSec;
 
     return TH_SUCCESS;
 }
@@ -447,15 +464,15 @@ TH_ErrorCode trackHat_GetUptime(trackHat_Device_t* device, uint32_t* seconds)
 
 DWORD WINAPI trackHat_ReceiverThreadFunction(LPVOID lpParameter)
 {
-    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(lpParameter);
-    trackHat_Thread_t& receiver = internal.m_receiver;
-    trackHat_Messages_t& messages = internal.m_messages;
-    usbSerial_t& serial = internal.m_serial;
+    trackHat_Internal_t* pInternal = reinterpret_cast<trackHat_Internal_t*>(lpParameter);
+    trackHat_Thread_t& receiver = pInternal->m_receiver;
+    trackHat_Messages_t& messages = pInternal->m_messages;
+    usbSerial_t& serial = pInternal->m_serial;
     TH_ErrorCode result = TH_SUCCESS;
 
     // Buffer for serial per iteration MessageCoordinates::FrameSize size makes the USB
     // return the data immediately after receiving the coordinate frame and not wait until
-    // the end of the timeout in case the buffer is large 
+    // the end of the timeout in case the buffer is large
     uint8_t serialBuffer[MessageExtendedCoordinates::FrameSize];
     size_t readSize = 0;
 
@@ -480,7 +497,7 @@ DWORD WINAPI trackHat_ReceiverThreadFunction(LPVOID lpParameter)
         else if (result==TH_ERROR_DEVICE_COMUNICATION_FAILD)
         {
             LOG_ERROR("Device unplugged.");
-            internal.m_isUnplugged = true;
+            pInternal->m_isUnplugged = true;
             receiver.m_isRunning = false;
         }
     }
@@ -492,10 +509,10 @@ DWORD WINAPI trackHat_ReceiverThreadFunction(LPVOID lpParameter)
 
 DWORD WINAPI trackHat_CallbackThreadFunction(LPVOID lpParameter)
 {
-    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(lpParameter);
-    trackHat_Callback_t& callback = internal.m_callback;
-    MessageCoordinates& coordinates = internal.m_messages.m_coordinates;
-    MessageExtendedCoordinates& extendedCoordinates = internal.m_messages.m_extendedCoordinates;
+    trackHat_Internal_t pInternal = *reinterpret_cast<trackHat_Internal_t*>(lpParameter);
+    trackHat_Callback_t& callback = pInternal.m_callback;
+    MessageCoordinates& coordinates = pInternal.m_messages.m_coordinates;
+    MessageExtendedCoordinates& extendedCoordinates = pInternal.m_messages.m_extendedCoordinates;
 
     time_t lastErrorTimeSec = 0;
     trackHat_Points_t points;
@@ -506,7 +523,7 @@ DWORD WINAPI trackHat_CallbackThreadFunction(LPVOID lpParameter)
 
     while (callback.m_thread.m_isRunning)
     {
-        if (internal.m_frameType == TH_FRAME_BASIC)
+        if (pInternal.m_frameType == TH_FRAME_BASIC)
         {
             // Check 'm_thread.m_isRunning' every 100 ms
 
@@ -538,9 +555,9 @@ DWORD WINAPI trackHat_CallbackThreadFunction(LPVOID lpParameter)
                         TH_ErrorCode error = TH_ERROR_WRONG_PARAMETER;
                         if (result == WAIT_TIMEOUT)
                         {
-                            if (internal.m_isUnplugged)
+                            if (pInternal.m_isUnplugged)
                                 error = TH_ERROR_DEVICE_DISCONECTED;
-                            else if (internal.m_isOpen)
+                            else if (pInternal.m_isOpen)
                                 error = TH_ERROR_DEVICE_COMUNICATION_TIMEOUT;
                             else
                                 error = TH_ERROR_DEVICE_NOT_OPEN;
@@ -552,7 +569,7 @@ DWORD WINAPI trackHat_CallbackThreadFunction(LPVOID lpParameter)
                 }
             }
         }
-        else if (internal.m_frameType == TH_FRAME_EXTENDED)
+        else if (pInternal.m_frameType == TH_FRAME_EXTENDED)
         {
             // Check 'm_thread.m_isRunning' every 100 ms
 
@@ -584,9 +601,9 @@ DWORD WINAPI trackHat_CallbackThreadFunction(LPVOID lpParameter)
                         TH_ErrorCode error = TH_ERROR_WRONG_PARAMETER;
                         if (result == WAIT_TIMEOUT)
                         {
-                            if (internal.m_isUnplugged)
+                            if (pInternal.m_isUnplugged)
                                 error = TH_ERROR_DEVICE_DISCONECTED;
-                            else if (internal.m_isOpen)
+                            else if (pInternal.m_isOpen)
                                 error = TH_ERROR_DEVICE_COMUNICATION_TIMEOUT;
                             else
                                 error = TH_ERROR_DEVICE_NOT_OPEN;
@@ -598,8 +615,8 @@ DWORD WINAPI trackHat_CallbackThreadFunction(LPVOID lpParameter)
                 }
             }
         }
-        ReleaseMutex(callback.m_mutex);
 
+        ReleaseMutex(callback.m_mutex);
     }
 
     LOG_INFO("Callback system finished.");
@@ -663,11 +680,11 @@ TH_ErrorCode trackHat_GetDetectedPoints(trackHat_Device_t* device, trackHat_Poin
     if ((device == nullptr) || (device->m_pInternal == nullptr) || (points == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
 
-    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
-    MessageCoordinates& coordinates = internal.m_messages.m_coordinates;
+    trackHat_Internal_t* pInternal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    MessageCoordinates& coordinates = pInternal->m_messages.m_coordinates;
     TH_ErrorCode result = TH_ERROR_WRONG_PARAMETER;
 
-    if (internal.m_isUnplugged)
+    if (pInternal->m_isUnplugged)
     {
         return TH_ERROR_DEVICE_DISCONECTED;
     }
@@ -690,11 +707,11 @@ TH_ErrorCode trackHat_GetDetectedExtendedPoints(trackHat_Device_t* device, track
     if ((device == nullptr) || (device->m_pInternal == nullptr) || (points == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
 
-    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
-    MessageExtendedCoordinates& extendedCoordinates = internal.m_messages.m_extendedCoordinates;
+    trackHat_Internal_t* pInternal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    MessageExtendedCoordinates& extendedCoordinates = pInternal->m_messages.m_extendedCoordinates;
     TH_ErrorCode result = TH_ERROR_WRONG_PARAMETER;
 
-    if (internal.m_isUnplugged)
+    if (pInternal->m_isUnplugged)
     {
         return TH_ERROR_DEVICE_DISCONECTED;
     }
@@ -774,11 +791,11 @@ TH_ErrorCode trackHat_GetDetectedPointsExtended(trackHat_Device_t *device, track
     if ((device == nullptr) || (device->m_pInternal == nullptr) || (points == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
 
-    trackHat_Internal_t& internal = *reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
-    MessageExtendedCoordinates& extendedCoordinates = internal.m_messages.m_extendedCoordinates;
+    trackHat_Internal_t* pInternal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    MessageExtendedCoordinates& extendedCoordinates = pInternal->m_messages.m_extendedCoordinates;
     TH_ErrorCode result = TH_ERROR_WRONG_PARAMETER;
 
-    if (internal.m_isUnplugged)
+    if (pInternal->m_isUnplugged)
     {
         return TH_ERROR_DEVICE_DISCONECTED;
     }
@@ -801,10 +818,10 @@ TH_ErrorCode trackHat_SetRegisterValue(trackHat_Device_t* device, trackHat_SetRe
     if ((device==nullptr) || (device->m_pInternal == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
 
-    trackHat_Internal_t* internal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
-    usbSerial_t& serial = internal->m_serial;
+    trackHat_Internal_t* pInternal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    usbSerial_t& serial = pInternal->m_serial;
 
-    if (internal->m_isUnplugged)
+    if (pInternal->m_isUnplugged)
     {
         return TH_ERROR_DEVICE_DISCONECTED;
     }
@@ -818,7 +835,7 @@ TH_ErrorCode trackHat_SetRegisterValue(trackHat_Device_t* device, trackHat_SetRe
         return result;
     }
 
-    result = trackHat_waitForResponse(internal, transactionID);
+    result = trackHat_waitForResponse(pInternal, transactionID);
 
 
     return result;
@@ -829,10 +846,10 @@ TH_ErrorCode trackHat_SetRegisterGroupValue(trackHat_Device_t* device, trackHat_
     if ((device==nullptr) || (device->m_pInternal == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
 
-    trackHat_Internal_t* internal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
-    usbSerial_t& serial = internal->m_serial;
+    trackHat_Internal_t* pInternal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    usbSerial_t& serial = pInternal->m_serial;
 
-    if (internal->m_isUnplugged)
+    if (pInternal->m_isUnplugged)
     {
         return TH_ERROR_DEVICE_DISCONECTED;
     }
@@ -846,7 +863,7 @@ TH_ErrorCode trackHat_SetRegisterGroupValue(trackHat_Device_t* device, trackHat_
         return result;
     }
 
-    result = trackHat_waitForResponse(internal, transactionID);
+    result = trackHat_waitForResponse(pInternal, transactionID);
 
 
     return result;
@@ -857,10 +874,10 @@ TH_ErrorCode trackHat_SetLeds(trackHat_Device_t* device, trackHat_SetLeds_t* new
     if ((device==nullptr) || (device->m_pInternal == nullptr))
         return TH_ERROR_WRONG_PARAMETER;
 
-    trackHat_Internal_t* internal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
-    usbSerial_t& serial = internal->m_serial;
+    trackHat_Internal_t* pInternal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    usbSerial_t& serial = pInternal->m_serial;
 
-    if (internal->m_isUnplugged)
+    if (pInternal->m_isUnplugged)
     {
         return TH_ERROR_DEVICE_DISCONECTED;
     }
@@ -874,7 +891,7 @@ TH_ErrorCode trackHat_SetLeds(trackHat_Device_t* device, trackHat_SetLeds_t* new
         return result;
     }
 
-    result = trackHat_waitForResponse(internal, transactionID);
+    result = trackHat_waitForResponse(pInternal, transactionID);
 
     return result;
 }
