@@ -93,7 +93,7 @@ namespace UsbSerial
                             // Check if it really is a com port
                             if (strncmp(serialPortName, "COM", 3) == 0)
                             {
-                                int32_t comPortNo = atoi(serialPortName + 3);
+                                int32_t comPortNo = ::atoi(serialPortName + 3);
                                 if (comPortNo != 0)
                                 {
                                     detectedComPort = comPortNo;
@@ -144,7 +144,7 @@ namespace UsbSerial
         if (serial.m_comHandler == INVALID_HANDLE_VALUE)
         {
             LOG_ERROR("Windows cannot connect to the TrackHat port.");
-            return TH_ERROR_DEVICE_COMUNICATION_FAILD;
+            return TH_ERROR_DEVICE_COMMUNICATION_FAILED;
         }
 
         //Setting Timeouts
@@ -157,7 +157,7 @@ namespace UsbSerial
         if (SetCommTimeouts(serial.m_comHandler, &serial.m_timeouts) == FALSE)
         {
             LOG_ERROR("Windows cannot setup port for the TrackHat connection.");
-            return TH_ERROR_DEVICE_COMUNICATION_FAILD;
+            return TH_ERROR_DEVICE_COMMUNICATION_FAILED;
         }
 
         serial.m_isPortOpen = true;
@@ -193,13 +193,13 @@ namespace UsbSerial
         if (status == FALSE)
         {
             LOG_ERROR("Data cannot be transferred.");
-            return TH_ERROR_DEVICE_COMUNICATION_FAILD;
+            return TH_ERROR_DEVICE_COMMUNICATION_FAILED;
         }
 
         if (size != static_cast<uint32_t>(writtenSize))
         {
             LOG_ERROR("Cannot transfer all data.");
-            return TH_ERROR_DEVICE_COMUNICATION_FAILD;
+            return TH_ERROR_DEVICE_COMMUNICATION_FAILED;
         }
 
         return TH_SUCCESS;
@@ -220,7 +220,7 @@ namespace UsbSerial
         if (status == FALSE)
         {
             //LOG_ERROR("Cannot receive data.");
-            return TH_ERROR_DEVICE_COMUNICATION_FAILD;
+            return TH_ERROR_DEVICE_COMMUNICATION_FAILED;
         }
 
         readSizeOutput = static_cast<uint32_t>(readSize);

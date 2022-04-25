@@ -184,9 +184,9 @@ int main(int argc, char* argv[])
     trackHat_SetLeds_t setLedsSolid = {TH_LedState::TH_SOLID, TH_LedState::TH_SOLID, TH_LedState::TH_SOLID};
     trackHat_SetLeds_t setLedsOff = {TH_LedState::TH_OFF, TH_LedState::TH_OFF, TH_LedState::TH_OFF};
     trackHat_SetLeds(&device, &setLedsBlinking);
-    Sleep(static_cast<time_t>(5000));
+    ::Sleep(static_cast<time_t>(5000));
     trackHat_SetLeds(&device, &setLedsSolid);
-    Sleep(static_cast<time_t>(5000));
+    ::Sleep(static_cast<time_t>(5000));
     trackHat_SetLeds(&device, &setLedsOff);
 
     /*
@@ -241,8 +241,7 @@ void printTrackHatInfo(trackHat_Device_t* device)
         printf("    Software ver. : %d.%d\n", device->m_softwareVersionMajor,
                device->m_softwareVersionMinor);
         printf("    Serial Number : %d\n", device->m_serialNumber);
-        printf("    Mode          : %s\n", (device->m_isIdleMode == true) ?
-                   "idle" : "sending coordinates" );
+        printf("    Mode          : %s\n", device->m_isIdleMode ? "idle" : "sending coordinates" );
         if (result == TH_SUCCESS)
             printf("    Uptime        : %d:%02d:%02d\n", hours, minutes, seconds);
         else
@@ -262,8 +261,8 @@ void useCoordinates(trackHat_Device_t* device)
 
     while (runApplication)
     {
-        Sleep(100);
-    };
+        ::Sleep(100);
+    }
 
     trackHat_RemoveCallback(device);
 
@@ -276,7 +275,7 @@ void useCoordinates(trackHat_Device_t* device)
 
     while (runApplication)
     {
-        Sleep(100);
+        ::Sleep(100);
     };
 
     trackHat_RemoveCallback(device);
@@ -298,7 +297,7 @@ void useCoordinates(trackHat_Device_t* device)
 
     while (1)//runApplication)
     {
-        Sleep(static_cast<time_t>(timeoutSec * 1000));
+        ::Sleep(static_cast<DWORD>(timeoutSec * 1000));
 
 #if USE_EXTENDED_COORDINATES
         trackHat_ExtendedPoints_t extendedPoints;
@@ -318,7 +317,7 @@ void useCoordinates(trackHat_Device_t* device)
         {
             printf("Get coordinates error: %d\n", result);
             errorDetected = true;
-            Sleep(static_cast<time_t>(timeoutSec * 1000));
+            ::Sleep(static_cast<DWORD>(timeoutSec * 1000));
         }
 #else
         trackHat_Points_t points;
@@ -338,8 +337,8 @@ void useCoordinates(trackHat_Device_t* device)
         {
             printf("Get coordinates error: %d\n", result);
             errorDetected = true;
-            Sleep(timeoutSec * 1000);
-        }
+			::Sleep(static_cast<DWORD>(timeoutSec * 1000));
+		}
 #endif
 
     }
