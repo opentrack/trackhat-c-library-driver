@@ -875,6 +875,7 @@ TH_ErrorCode trackHat_SetRegisterGroupValue(trackHat_Device_t* device, trackHat_
     result = trackHat_WaitForResponse(pInternal, transactionID);
     return result;
 }
+
 TH_ErrorCode trackHat_EnableBootloader(trackHat_Device_t* device, TH_BootloaderMode bootloaderMode)
 {
     if ((device==nullptr) || (device->m_pInternal == nullptr))
@@ -885,7 +886,7 @@ TH_ErrorCode trackHat_EnableBootloader(trackHat_Device_t* device, TH_BootloaderM
 
     if (internal->m_isUnplugged)
     {
-        return TH_ERROR_DEVICE_DISCONECTED;
+        return TH_ERROR_DEVICE_DISCONNECTED;
     }
 
     uint8_t transactionID = 0;
@@ -897,8 +898,7 @@ TH_ErrorCode trackHat_EnableBootloader(trackHat_Device_t* device, TH_BootloaderM
         return result;
     }
 
-    result = trackHat_waitForResponse(internal, transactionID);
-
+    result = trackHat_WaitForResponse(internal, transactionID);
     return result;
 }
 
