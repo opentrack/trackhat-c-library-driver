@@ -40,6 +40,12 @@ enum TH_FrameType
     TH_FRAME_EXTENDED = 1,
 };
 
+enum TH_BootloaderMode
+{
+    TH_BOOTLOADER_OFF = 0,
+    TH_BOOTLOADER_ON = 1,
+};
+
 enum TH_LedState
 {
     TH_UNCHANGED = 0,
@@ -47,6 +53,7 @@ enum TH_LedState
     TH_BLINK = 2,
     TH_SOLID = 3,
 };
+
 
 /* Maximum number of points detected by TrackHat camera. */
 #define TRACK_HAT_NUMBER_OF_POINTS 16
