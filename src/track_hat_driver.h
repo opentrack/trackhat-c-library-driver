@@ -149,6 +149,12 @@ TH_ErrorCode trackHat_SetLeds(trackHat_Device_t* device, trackHat_SetLeds_t* new
 EXPORT_API
 TH_ErrorCode trackHat_SetRegisterGroupValue(trackHat_Device_t* device, trackHat_SetRegisterGroup_t* newRegisterGroupValue);
 
+/**
+ * Enable bootloader for firmware upgrade
+ */
+EXPORT_API
+TH_ErrorCode trackHat_EnableBootloader(trackHat_Device_t* device, TH_BootloaderMode bootloaderMode);
+
 EXPORT_API
 void trackHat_SetDebugHandler(TH_LogHandler_t fn);
 

@@ -875,6 +875,32 @@ TH_ErrorCode trackHat_SetRegisterGroupValue(trackHat_Device_t* device, trackHat_
     result = trackHat_WaitForResponse(pInternal, transactionID);
     return result;
 }
+TH_ErrorCode trackHat_EnableBootloader(trackHat_Device_t* device, TH_BootloaderMode bootloaderMode)
+{
+    if ((device==nullptr) || (device->m_pInternal == nullptr))
+        return TH_ERROR_WRONG_PARAMETER;
+
+    trackHat_Internal_t* internal = reinterpret_cast<trackHat_Internal_t*>(device->m_pInternal);
+    usbSerial_t& serial = internal->m_serial;
+
+    if (internal->m_isUnplugged)
+    {
+        return TH_ERROR_DEVICE_DISCONECTED;
+    }
+
+    uint8_t transactionID = 0;
+    uint8_t txMessage[MESSAGE_TX_BUFFER_SIZE] = {};
+    size_t  txMessageSize = Parser::createMessageEnableBootloader(txMessage, MESSAGE_TX_BUFFER_SIZE, bootloaderMode, &transactionID);
+    TH_ErrorCode result = UsbSerial::write(serial, txMessage, txMessageSize);
+    if (result != TH_SUCCESS)
+    {
+        return result;
+    }
+
+    result = trackHat_waitForResponse(internal, transactionID);
+
+    return result;
+}
 
 TH_ErrorCode trackHat_SetLeds(trackHat_Device_t* device, trackHat_SetLeds_t* newLedState)
 {

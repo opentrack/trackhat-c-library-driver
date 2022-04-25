@@ -81,6 +81,16 @@ namespace Parser
      * \param[in/out] messages     Structure of 'trackHat_Messages_t' where parsed data wil be stored.
      *
      */
+    size_t createMessageEnableBootloader(uint8_t* message, uint16_t bufferSize, TH_BootloaderMode bootloaderMode, uint8_t* messageTransactionID);
+
+
+    /**
+     * Parse binary data na conver it to TrackHat messages.
+     *
+     * \param[in/out] input        Vector of the data to parse. The parsed bytes are deleted.
+     * \param[in/out] messages     Structure of 'trackHat_Messages_t' where parsed data wil be stored.
+     *
+     */
     void parseInputData(std::vector<uint8_t>& input, trackHat_Messages_t& messages);
 
     /**
