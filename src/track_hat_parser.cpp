@@ -330,11 +330,11 @@ namespace Parser
                     break;
                 }
 
-				case MessageID::ID_EXTENDED_COORDINATES:
-				{
+                case MessageID::ID_EXTENDED_COORDINATES:
+                {
 
-				    if (input.size() >= MessageExtendedCoordinates::FrameSize)
-					{
+                    if (input.size() >= MessageExtendedCoordinates::FrameSize)
+                    {
                         if (checkCRC(input, MessageNACK::FrameSize))
                         {
                             //LOG_INFO("New Extended Coordinates message.");
@@ -347,21 +347,21 @@ namespace Parser
                             input.erase(input.begin());
                         }
                     }
-				    else
-					{
-						return;
-					}
-					break;
-				}
+                    else
+                    {
+                        return;
+                    }
+                    break;
+                }
 
-				default:
-				{
-					char bytes[8];
-					sprintf_s(bytes, sizeof(bytes), "0x%02x", input[0]);
-					LOG_ERROR("Unknown frame Id " << bytes << ".");
-					input.erase(input.begin());
-					break;
-				}
+                default:
+                {
+                    char bytes[8];
+                    sprintf_s(bytes, sizeof(bytes), "0x%02x", input[0]);
+                    LOG_ERROR("Unknown frame Id " << bytes << ".");
+                    input.erase(input.begin());
+                    break;
+                }
             }
         }
     }
@@ -378,7 +378,7 @@ namespace Parser
     {
         // Get CRC from the last two bytes
         auto crc1 = static_cast<uint16_t>(
-			static_cast<unsigned>(buffer[size - 2]) << 8 | static_cast<unsigned>(buffer[size - 1]));
+            static_cast<unsigned>(buffer[size - 2]) << 8 | static_cast<unsigned>(buffer[size - 1]));
         // Calculate CRC without last two bytes
         uint16_t crc2 = calculateCCITTCRC16(buffer, size - 2);
         return crc1 == crc2;
