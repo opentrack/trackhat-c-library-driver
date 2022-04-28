@@ -10,9 +10,9 @@ set SIGN_SCRIPT="%SCRIPTS_DIR%\sign_artifact.bat"
 set CL=/MP
 
 rem Default build configuration
-set DEBUG_BUILD=1
+set DEBUG_BUILD=0
 set SIGN_SOFTWARE=0
-set CREATE_INSTALER=0
+set CREATE_INSTALLER=0
 
 echo on
 setlocal
@@ -56,7 +56,7 @@ exit /b
 
         ) else if "%%A"=="--installer" (
             echo "Create installer."
-            set CREATE_INSTALER=1
+            set CREATE_INSTALLER=1
 
         ) else (
             echo "Wrong parameter. Printing help"
@@ -68,7 +68,7 @@ exit /b
 echo Script variables:
 echo DEBUG_BUILD=%DEBUG_BUILD%
 echo SIGN_SOFTWARE=%SIGN_SOFTWARE%
-echo CREATE_INSTALER=%CREATE_INSTALER%
+echo CREATE_INSTALLER=%CREATE_INSTALLER%
 
 
 if %DEBUG_BUILD%==1 (
@@ -118,7 +118,7 @@ if %errorlevel% neq 0 goto :showerror
 
 rem Create installer
 
-if %CREATE_INSTALER%==1 (
+if %CREATE_INSTALLER%==1 (
     if %DEBUG_BUILD%==0 (
         echo Create installer
         %INNOSETUP% %SCRIPTS_DIR%/installer.iss
@@ -133,7 +133,7 @@ if %errorlevel% neq 0 goto :showerror
 rem Signing installer
 
 if %SIGN_SOFTWARE%==1 (
-    if %CREATE_INSTALER%==1 (
+    if %CREATE_INSTALLER%==1 (
         if %DEBUG_BUILD%==0 (
             echo Signing installer
             call "%SIGN_SCRIPT%" "TrackHat" "%BUILD_DIR%\installer\TrackHat-driver-installer-*.exe"

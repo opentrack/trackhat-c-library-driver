@@ -31,7 +31,7 @@ typedef struct
     MessageCoordinates         m_coordinates;
     MessageNACK                m_nack;
     MessageExtendedCoordinates m_extendedCoordinates;
-    uint8_t                    m_lastACKTransactionId;
+    uint8_t                    m_lastACKTransactionId = 0;
 } trackHat_Messages_t;
 
 
@@ -39,7 +39,7 @@ typedef struct
 typedef struct trackHat_Thread_t
 {
     HANDLE  m_threadHandler = NULL;
-    DWORD   m_threadID;
+    DWORD   m_threadID = 0;
     bool    m_isRunning = false;
 } trackHat_Thread_t;
 

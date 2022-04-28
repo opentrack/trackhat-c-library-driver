@@ -132,13 +132,32 @@ EXPORT_API
 TH_ErrorCode trackHat_RemoveCallback(trackHat_Device_t* device);
 
 /**
- * Remove previously added callback.
+ * Set a single register value
  */
+EXPORT_API
 TH_ErrorCode trackHat_SetRegisterValue(trackHat_Device_t* device, trackHat_SetRegister_t* newRegisterValue);
+
+/**
+ * Set all LEDs status
+ */
+EXPORT_API
 TH_ErrorCode trackHat_SetLeds(trackHat_Device_t* device, trackHat_SetLeds_t* newLedState);
-TH_ErrorCode trackHat_EnableBootloader(trackHat_Device_t* device, TH_BootloaderMode bootloaderMode);
+
+/**
+ * Set a group of register values
+ */
+EXPORT_API
 TH_ErrorCode trackHat_SetRegisterGroupValue(trackHat_Device_t* device, trackHat_SetRegisterGroup_t* newRegisterGroupValue);
+
+/**
+ * Enable bootloader for firmware upgrade
+ */
+EXPORT_API
+TH_ErrorCode trackHat_EnableBootloader(trackHat_Device_t* device, TH_BootloaderMode bootloaderMode);
+
+EXPORT_API
 void trackHat_SetDebugHandler(TH_LogHandler_t fn);
+
 void setRegisterGroupValue(uint8_t registerBank, uint8_t registerAdress, uint8_t registerValue, trackHat_SetRegisterGroup_t& setRegisterGroup);
 
 #ifdef __cplusplus

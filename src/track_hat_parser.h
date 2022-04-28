@@ -112,9 +112,9 @@ namespace Parser
      * \return         true or false depending if CRC is correct or not.
      *
      */
-    bool checkCRC(std::vector<uint8_t>& buffer, size_t size);
+    bool checkCRC(const std::vector<uint8_t>& buffer, size_t size);
 
-    void parseRawExtendedPointToHumanRedable(trackHat_ExtendedPointRaw_t& rawPoint, trackHat_ExtendedPoint_t& extendedPointsParsed);
+    void parseRawExtendedPointToHumanRedable(const trackHat_ExtendedPointRaw_t& rawPoint, trackHat_ExtendedPoint_t& extendedPointsParsed);
 
     void printExtendedPoint(trackHat_ExtendedPoint_t extendedPoint, int i);
 

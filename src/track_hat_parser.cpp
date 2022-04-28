@@ -80,7 +80,8 @@ namespace Parser
         appednCRC(message, messageLength);
         return messageLength;
     }
-size_t createMessageSetLeds(uint8_t* message, trackHat_SetLeds_t* setLeds, uint8_t* messageTransactionID)
+
+    size_t createMessageSetLeds(uint8_t* message, trackHat_SetLeds_t* setLeds, uint8_t* messageTransactionID)
     {
         *messageTransactionID = transactionID;
         message[0] = MessageID::ID_SET_LEDS;
@@ -139,59 +140,56 @@ size_t createMessageSetLeds(uint8_t* message, trackHat_SetLeds_t* setLeds, uint8
         SetEvent(deviceInfo.m_newMessageEvent);
     }
 
-    void parseMessageCoordinates(std::vector<uint8_t>& input, MessageCoordinates& coordinates)
+    void parseMessageCoordinates(const std::vector<uint8_t>& input, MessageCoordinates& coordinates)
     {
         trackHat_Point_t* points = coordinates.m_points.m_point;
         uint16_t value = 0;
         size_t byte = 1;
 
-        WaitForSingleObject(coordinates.m_mutex, INFINITE);
+        ::WaitForSingleObject(coordinates.m_mutex, INFINITE);
 
         for (size_t i = 0; i < TRACK_HAT_NUMBER_OF_POINTS; i++)
         {
-            value = input[byte++] << 8;
+            value = static_cast<uint16_t>(input[byte++] << 8);
             value = value | input[byte++];
             points[i].m_x = value;
 
-            value = input[byte++] << 8;
+            value = static_cast<uint16_t>(input[byte++] << 8);
             value = value | input[byte++];
             points[i].m_y = value;
 
             points[i].m_brightness = input[byte++];
         }
 
-        ReleaseMutex(coordinates.m_mutex);
-        //TODO: to remove
-        //LOG_INFO("SetEvent " << (int)points[0].m_brightness);
-        SetEvent(coordinates.m_newMessageEvent);
-        SetEvent(coordinates.m_newCallbackEvent);
+        ::ReleaseMutex(coordinates.m_mutex);
+        ::SetEvent(coordinates.m_newMessageEvent);
+        ::SetEvent(coordinates.m_newCallbackEvent);
     }
 
-    void parseMessageExtendedCoordinates(std::vector<uint8_t>& input, MessageExtendedCoordinates& extendedCoordinates)
+    void parseMessageExtendedCoordinates(const std::vector<uint8_t>& input, MessageExtendedCoordinates& extendedCoordinates)
     {
         trackHat_ExtendedPointRaw_t rawPoints[TRACK_HAT_NUMBER_OF_POINTS];
 
         bool result = checkCRC(input, MessageExtendedCoordinates::FrameSize);
         if (result)
         {
-            memcpy(&rawPoints, input.data()+1, MessageExtendedCoordinates::FrameSize-3);
+            ::memcpy(&rawPoints, input.data()+1, MessageExtendedCoordinates::FrameSize-3);
             for (size_t i=0; i<TRACK_HAT_NUMBER_OF_POINTS; i++)
             {
                 parseRawExtendedPointToHumanRedable(rawPoints[i], extendedCoordinates.m_points.m_point[i]);
             }
-            ReleaseMutex(extendedCoordinates.m_mutex);
-            SetEvent(extendedCoordinates.m_newMessageEvent);
-            SetEvent(extendedCoordinates.m_newCallbackEvent);
+            ::ReleaseMutex(extendedCoordinates.m_mutex);
+            ::SetEvent(extendedCoordinates.m_newMessageEvent);
+            ::SetEvent(extendedCoordinates.m_newCallbackEvent);
         }
-        input.erase(input.begin(), input.begin()+MessageExtendedCoordinates::FrameSize);
     }
 
-    void parseMessageACK(std::vector<uint8_t>& input, trackHat_Messages_t& messages)
+    void parseMessageACK(const std::vector<uint8_t>& input, trackHat_Messages_t& messages)
     {
         messages.m_lastACKTransactionId = input[1];
     }
 
-    void parseMessageNACK(std::vector<uint8_t>& input, MessageNACK& nack)
+    void parseMessageNACK(const std::vector<uint8_t>& input, MessageNACK& nack)
     {
         nack.m_transactionID = input[1];
         nack.m_reason = static_cast<NACKReason>(input[2]);
@@ -332,24 +330,35 @@ size_t createMessageSetLeds(uint8_t* message, trackHat_SetLeds_t* setLeds, uint8
                     break;
                 }
 
-            case MessageID::ID_EXTENDED_COORDINATES:
-            {
+                case MessageID::ID_EXTENDED_COORDINATES:
+                {
 
-                if (input.size() >= MessageExtendedCoordinates::FrameSize)
-                {
-                    parseMessageExtendedCoordinates(input, messages.m_extendedCoordinates);
+                    if (input.size() >= MessageExtendedCoordinates::FrameSize)
+                    {
+                        if (checkCRC(input, MessageNACK::FrameSize))
+                        {
+                            //LOG_INFO("New Extended Coordinates message.");
+                            parseMessageExtendedCoordinates(input, messages.m_extendedCoordinates);
+                            input.erase(input.begin(), input.begin() + MessageExtendedCoordinates::FrameSize);
+                        }
+                        else
+                        {
+                            LOG_ERROR("New Extended Coordinates message - wrong CRC.");
+                            input.erase(input.begin());
+                        }
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    break;
                 }
-                else
-                {
-                    return;
-                }
-                break;
-            }
+
                 default:
                 {
-                    char byte[8];
-                    sprintf(byte, "0x%02x", input[0]);
-                    LOG_ERROR("Unknown frame Id " << byte << ".");
+                    char bytes[8];
+                    sprintf_s(bytes, sizeof(bytes), "0x%02x", input[0]);
+                    LOG_ERROR("Unknown frame Id " << bytes << ".");
                     input.erase(input.begin());
                     break;
                 }
@@ -365,27 +374,21 @@ size_t createMessageSetLeds(uint8_t* message, trackHat_SetLeds_t* setLeds, uint8
         message[index++] = crc & 0xff;
     }
 
-    bool checkCRC(std::vector<uint8_t>& buffer, size_t size)
+    bool checkCRC(const std::vector<uint8_t>& buffer, size_t size)
     {
         // Get CRC from the last two bytes
-        uint16_t crc1 = static_cast<uint16_t>(buffer[size - 2]) << 8 |
-                        static_cast<uint16_t>(buffer[size - 1]);
+        auto crc1 = static_cast<uint16_t>(
+            static_cast<unsigned>(buffer[size - 2]) << 8 | static_cast<unsigned>(buffer[size - 1]));
         // Calculate CRC without last two bytes
         uint16_t crc2 = calculateCCITTCRC16(buffer, size - 2);
         return crc1 == crc2;
     }
 
-    void parseRawExtendedPointToHumanRedable(trackHat_ExtendedPointRaw_t& rawPoint, trackHat_ExtendedPoint_t& extendedPointsParsed)
+    void parseRawExtendedPointToHumanRedable(const trackHat_ExtendedPointRaw_t& rawPoint, trackHat_ExtendedPoint_t& extendedPointsParsed)
     {
-        extendedPointsParsed.m_area = (rawPoint.m_areaHigh << 8) | rawPoint.m_areaLow;
-        extendedPointsParsed.m_coordinateX = rawPoint.m_coordinateXHigh;
-        extendedPointsParsed.m_coordinateX = (extendedPointsParsed.m_coordinateX << 8) | rawPoint.m_coordinateXLow;
-        extendedPointsParsed.m_coordinateX = extendedPointsParsed.m_coordinateX & 0x3fff;
-
-        extendedPointsParsed.m_coordinateY = rawPoint.m_coordinateYHigh;
-        extendedPointsParsed.m_coordinateY = (extendedPointsParsed.m_coordinateY << 8) | rawPoint.m_coordinateYLow;
-        extendedPointsParsed.m_coordinateY = extendedPointsParsed.m_coordinateY & 0x3fff;
-
+        extendedPointsParsed.m_area = static_cast<uint16_t>(static_cast<unsigned>(rawPoint.m_areaHigh << 8) | static_cast<unsigned>(rawPoint.m_areaLow));
+        extendedPointsParsed.m_coordinateX = static_cast<uint16_t>(static_cast<unsigned>(rawPoint.m_coordinateXHigh << 8) | static_cast<unsigned>(rawPoint.m_coordinateXLow)) & 0x3fff;
+        extendedPointsParsed.m_coordinateY = static_cast<uint16_t>(static_cast<unsigned>(rawPoint.m_coordinateYHigh << 8) | static_cast<unsigned>(rawPoint.m_coordinateYLow)) & 0x3fff;
         extendedPointsParsed.m_averageBrightness = rawPoint.m_averageBrightness;
         extendedPointsParsed.m_maximumBrightness = rawPoint.m_maximumBrightness;
         extendedPointsParsed.m_range = rawPoint.m_range;
@@ -402,7 +405,6 @@ size_t createMessageSetLeds(uint8_t* message, trackHat_SetLeds_t* setLeds, uint8
     void printExtendedPoint(trackHat_ExtendedPoint_t extendedPoint, int i)
     {
         std::cout << "Index = " << i << " X = " << extendedPoint.m_coordinateX << " Y = " << extendedPoint.m_coordinateY << std::endl;
-        std::cout.flush();
     }
 
 
