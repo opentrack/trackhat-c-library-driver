@@ -337,8 +337,8 @@ void useCoordinates(trackHat_Device_t* device)
         {
             printf("Get coordinates error: %d\n", result);
             errorDetected = true;
-			::Sleep(static_cast<DWORD>(timeoutSec * 1000));
-		}
+            ::Sleep(static_cast<DWORD>(timeoutSec * 1000));
+        }
 #endif
 
     }
