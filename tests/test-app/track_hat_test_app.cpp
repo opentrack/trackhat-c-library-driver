@@ -151,11 +151,11 @@ int main(int argc, char* argv[])
      * */
 
     trackHat_SetRegisterGroup_t setRegisterGroup = {};
-    for(int i = 0; i < 19; i++)
-    {
+
+        setRegisterGroupValue(0x00, 0x19, 0x01, setRegisterGroup);
         setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
-    }
-    const auto time1 = std::chrono::system_clock::now();
+
+        const auto time1 = std::chrono::system_clock::now();
     for(int i = 0; i <= 60; i++)
     {
         result = trackHat_SetRegisterGroupValue(&device, &setRegisterGroup);
@@ -180,14 +180,14 @@ int main(int argc, char* argv[])
      * TH_LedState::TH_OFF - green LED
      * TH_LedState::TH_SOLID - blue LED
      * */
-    trackHat_SetLeds_t setLedsBlinking = {TH_LedState::TH_BLINK, TH_LedState::TH_BLINK, TH_LedState::TH_BLINK};
-    trackHat_SetLeds_t setLedsSolid = {TH_LedState::TH_SOLID, TH_LedState::TH_SOLID, TH_LedState::TH_SOLID};
-    trackHat_SetLeds_t setLedsOff = {TH_LedState::TH_OFF, TH_LedState::TH_OFF, TH_LedState::TH_OFF};
-    trackHat_SetLeds(&device, &setLedsBlinking);
-    ::Sleep(static_cast<time_t>(5000));
-    trackHat_SetLeds(&device, &setLedsSolid);
-    ::Sleep(static_cast<time_t>(5000));
-    trackHat_SetLeds(&device, &setLedsOff);
+//    trackHat_SetLeds_t setLedsBlinking = {TH_LedState::TH_BLINK, TH_LedState::TH_BLINK, TH_LedState::TH_BLINK};
+//    trackHat_SetLeds_t setLedsSolid = {TH_LedState::TH_SOLID, TH_LedState::TH_SOLID, TH_LedState::TH_SOLID};
+//    trackHat_SetLeds_t setLedsOff = {TH_LedState::TH_OFF, TH_LedState::TH_OFF, TH_LedState::TH_OFF};
+//    trackHat_SetLeds(&device, &setLedsBlinking);
+//    ::Sleep(static_cast<time_t>(5000));
+//    trackHat_SetLeds(&device, &setLedsSolid);
+//    ::Sleep(static_cast<time_t>(5000));
+//    trackHat_SetLeds(&device, &setLedsOff);
 
     /*
      * Example how to set register
@@ -203,7 +203,7 @@ int main(int argc, char* argv[])
     trackHat_SetRegisterValue(&device, &registerValue);
     registerValue = {0x00, 0x19, 0x01};
     trackHat_SetRegisterValue(&device, &registerValue);
-    //useCoordinates(&device);
+    useCoordinates(&device);
 
     // Disconnect from device
     result = trackHat_Disconnect(&device);

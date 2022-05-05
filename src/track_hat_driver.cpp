@@ -515,10 +515,10 @@ DWORD WINAPI trackHat_ReceiverThreadFunction(LPVOID lpParameter)
 
 DWORD WINAPI trackHat_CallbackThreadFunction(LPVOID lpParameter)
 {
-    trackHat_Internal_t pInternal = *reinterpret_cast<trackHat_Internal_t*>(lpParameter);
-    trackHat_Callback_t& callback = pInternal.m_callback;
-    MessageCoordinates& coordinates = pInternal.m_messages.m_coordinates;
-    MessageExtendedCoordinates& extendedCoordinates = pInternal.m_messages.m_extendedCoordinates;
+    trackHat_Internal_t* pInternal = reinterpret_cast<trackHat_Internal_t*>(lpParameter);
+    trackHat_Callback_t& callback = pInternal->m_callback;
+    MessageCoordinates& coordinates = pInternal->m_messages.m_coordinates;
+    MessageExtendedCoordinates& extendedCoordinates = pInternal->m_messages.m_extendedCoordinates;
 
     time_t lastErrorTimeSec = 0;
     trackHat_Points_t points;
@@ -529,7 +529,7 @@ DWORD WINAPI trackHat_CallbackThreadFunction(LPVOID lpParameter)
 
     while (callback.m_thread.m_isRunning)
     {
-        if (pInternal.m_frameType == TH_FRAME_BASIC)
+        if (pInternal->m_frameType == TH_FRAME_BASIC)
         {
             // Check 'm_thread.m_isRunning' every 100 ms
 
@@ -561,9 +561,9 @@ DWORD WINAPI trackHat_CallbackThreadFunction(LPVOID lpParameter)
                         TH_ErrorCode error = TH_ERROR_WRONG_PARAMETER;
                         if (result == WAIT_TIMEOUT)
                         {
-                            if (pInternal.m_isUnplugged)
+                            if (pInternal->m_isUnplugged)
                                 error = TH_ERROR_DEVICE_DISCONNECTED;
-                            else if (pInternal.m_isOpen)
+                            else if (pInternal->m_isOpen)
                                 error = TH_ERROR_DEVICE_COMMUNICATION_TIMEOUT;
                             else
                                 error = TH_ERROR_DEVICE_NOT_OPEN;
@@ -575,7 +575,7 @@ DWORD WINAPI trackHat_CallbackThreadFunction(LPVOID lpParameter)
                 }
             }
         }
-        else if (pInternal.m_frameType == TH_FRAME_EXTENDED)
+        else if (pInternal->m_frameType == TH_FRAME_EXTENDED)
         {
             // Check 'm_thread.m_isRunning' every 100 ms
 
@@ -607,9 +607,9 @@ DWORD WINAPI trackHat_CallbackThreadFunction(LPVOID lpParameter)
                         TH_ErrorCode error = TH_ERROR_WRONG_PARAMETER;
                         if (result == WAIT_TIMEOUT)
                         {
-                            if (pInternal.m_isUnplugged)
+                            if (pInternal->m_isUnplugged)
                                 error = TH_ERROR_DEVICE_DISCONNECTED;
-                            else if (pInternal.m_isOpen)
+                            else if (pInternal->m_isOpen)
                                 error = TH_ERROR_DEVICE_COMMUNICATION_TIMEOUT;
                             else
                                 error = TH_ERROR_DEVICE_NOT_OPEN;
