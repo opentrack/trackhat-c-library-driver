@@ -21,6 +21,7 @@ enum MessageID : uint8_t
     ID_SET_REGISTER_VALUE   = 0x06,
     ID_SET_REGISTER_GROUP   = 0x07,
     ID_SET_LEDS             = 0x08,
+    ID_RESET_DEVICE         = 0x09,
     ID_COORDINATE           = 0x0b,
     ID_EXTENDED_COORDINATES = 0x0c,
     ID_NACK                 = 0xff
@@ -71,7 +72,7 @@ public:
 /* Thread safe protection for Messages */
 struct MessageBase
 {
-    uint8_t m_transactionID;
+    uint8_t m_transactionID = 0;
 };
 
 
@@ -88,17 +89,23 @@ struct MessageDeviceInfo : public MessageBase, public MessageProtect
 {
     static const size_t FrameSize = 11;
 
-    uint8_t m_hardwareVersion;
-    uint8_t m_softwareVersionMajor;
-    uint8_t m_softwareVersionMinor;
-    uint32_t m_serialNumber;
+    uint8_t m_hardwareVersion = 0;
+    uint8_t m_softwareVersionMajor = 0;
+    uint8_t m_softwareVersionMinor = 0;
+    uint32_t m_serialNumber= 0;
 };
 
 struct MessageCoordinates : public MessageProtect
 {
     MessageCoordinates() :
+        m_points(),
         m_newCallbackEvent(CreateEvent(NULL, false, 0, NULL))
-    { }
+    {
+        for (size_t i = 0; i < TRACK_HAT_NUMBER_OF_POINTS; i++)
+        {
+            ::memset(&m_points.m_point[i], 0, sizeof(m_points.m_point[i]));
+        }
+    }
 
     ~MessageCoordinates()
     {
@@ -114,8 +121,14 @@ struct MessageCoordinates : public MessageProtect
 struct MessageExtendedCoordinates : public MessageProtect
 {
     MessageExtendedCoordinates():
+        m_points(),
         m_newCallbackEvent(CreateEvent(NULL, false, 0, NULL))
-    { }
+    { 
+        for (size_t i = 0; i < TRACK_HAT_NUMBER_OF_POINTS; i++)
+        {
+            ::memset(&m_points.m_point[i], 0, sizeof(m_points.m_point[i]));
+        }
+    }
 
     ~MessageExtendedCoordinates()
     {
@@ -134,6 +147,10 @@ struct MessageACK : public MessageBase
 
 struct MessageNACK : public MessageBase
 {
+    MessageNACK() :
+        m_reason(NACKReason::NACK_UNKNOWN)
+    {}
+
     static const size_t FrameSize = 5;
 
     NACKReason m_reason;

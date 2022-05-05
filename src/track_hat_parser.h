@@ -81,6 +81,16 @@ namespace Parser
      * \param[in/out] messages     Structure of 'trackHat_Messages_t' where parsed data wil be stored.
      *
      */
+    size_t createMessageEnableBootloader(uint8_t* message, uint16_t bufferSize, TH_BootloaderMode bootloaderMode, uint8_t* messageTransactionID);
+
+
+    /**
+     * Parse binary data na conver it to TrackHat messages.
+     *
+     * \param[in/out] input        Vector of the data to parse. The parsed bytes are deleted.
+     * \param[in/out] messages     Structure of 'trackHat_Messages_t' where parsed data wil be stored.
+     *
+     */
     void parseInputData(std::vector<uint8_t>& input, trackHat_Messages_t& messages);
 
     /**
@@ -102,9 +112,9 @@ namespace Parser
      * \return         true or false depending if CRC is correct or not.
      *
      */
-    bool checkCRC(std::vector<uint8_t>& buffer, size_t size);
+    bool checkCRC(const std::vector<uint8_t>& buffer, size_t size);
 
-    void parseRawExtendedPointToHumanRedable(trackHat_ExtendedPointRaw_t& rawPoint, trackHat_ExtendedPoint_t& extendedPointsParsed);
+    void parseRawExtendedPointToHumanRedable(const trackHat_ExtendedPointRaw_t& rawPoint, trackHat_ExtendedPoint_t& extendedPointsParsed);
 
     void printExtendedPoint(trackHat_ExtendedPoint_t extendedPoint, int i);
 

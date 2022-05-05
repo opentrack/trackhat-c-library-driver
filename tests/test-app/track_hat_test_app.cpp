@@ -151,11 +151,11 @@ int main(int argc, char* argv[])
      * */
 
     trackHat_SetRegisterGroup_t setRegisterGroup = {};
-    for(int i = 0; i < 19; i++)
-    {
+
+        setRegisterGroupValue(0x00, 0x19, 0x01, setRegisterGroup);
         setRegisterGroupValue(0x00, 0x19, 0x02, setRegisterGroup);
-    }
-    const auto time1 = std::chrono::system_clock::now();
+
+        const auto time1 = std::chrono::system_clock::now();
     for(int i = 0; i <= 60; i++)
     {
         result = trackHat_SetRegisterGroupValue(&device, &setRegisterGroup);
@@ -180,14 +180,14 @@ int main(int argc, char* argv[])
      * TH_LedState::TH_OFF - green LED
      * TH_LedState::TH_SOLID - blue LED
      * */
-    trackHat_SetLeds_t setLedsBlinking = {TH_LedState::TH_BLINK, TH_LedState::TH_BLINK, TH_LedState::TH_BLINK};
-    trackHat_SetLeds_t setLedsSolid = {TH_LedState::TH_SOLID, TH_LedState::TH_SOLID, TH_LedState::TH_SOLID};
-    trackHat_SetLeds_t setLedsOff = {TH_LedState::TH_OFF, TH_LedState::TH_OFF, TH_LedState::TH_OFF};
-    trackHat_SetLeds(&device, &setLedsBlinking);
-    Sleep(static_cast<time_t>(5000));
-    trackHat_SetLeds(&device, &setLedsSolid);
-    Sleep(static_cast<time_t>(5000));
-    trackHat_SetLeds(&device, &setLedsOff);
+//    trackHat_SetLeds_t setLedsBlinking = {TH_LedState::TH_BLINK, TH_LedState::TH_BLINK, TH_LedState::TH_BLINK};
+//    trackHat_SetLeds_t setLedsSolid = {TH_LedState::TH_SOLID, TH_LedState::TH_SOLID, TH_LedState::TH_SOLID};
+//    trackHat_SetLeds_t setLedsOff = {TH_LedState::TH_OFF, TH_LedState::TH_OFF, TH_LedState::TH_OFF};
+//    trackHat_SetLeds(&device, &setLedsBlinking);
+//    ::Sleep(static_cast<time_t>(5000));
+//    trackHat_SetLeds(&device, &setLedsSolid);
+//    ::Sleep(static_cast<time_t>(5000));
+//    trackHat_SetLeds(&device, &setLedsOff);
 
     /*
      * Example how to set register
@@ -203,7 +203,7 @@ int main(int argc, char* argv[])
     trackHat_SetRegisterValue(&device, &registerValue);
     registerValue = {0x00, 0x19, 0x01};
     trackHat_SetRegisterValue(&device, &registerValue);
-    //useCoordinates(&device);
+    useCoordinates(&device);
 
     // Disconnect from device
     result = trackHat_Disconnect(&device);
@@ -241,8 +241,7 @@ void printTrackHatInfo(trackHat_Device_t* device)
         printf("    Software ver. : %d.%d\n", device->m_softwareVersionMajor,
                device->m_softwareVersionMinor);
         printf("    Serial Number : %d\n", device->m_serialNumber);
-        printf("    Mode          : %s\n", (device->m_isIdleMode == true) ?
-                   "idle" : "sending coordinates" );
+        printf("    Mode          : %s\n", device->m_isIdleMode ? "idle" : "sending coordinates" );
         if (result == TH_SUCCESS)
             printf("    Uptime        : %d:%02d:%02d\n", hours, minutes, seconds);
         else
@@ -262,8 +261,8 @@ void useCoordinates(trackHat_Device_t* device)
 
     while (runApplication)
     {
-        Sleep(100);
-    };
+        ::Sleep(100);
+    }
 
     trackHat_RemoveCallback(device);
 
@@ -276,7 +275,7 @@ void useCoordinates(trackHat_Device_t* device)
 
     while (runApplication)
     {
-        Sleep(100);
+        ::Sleep(100);
     };
 
     trackHat_RemoveCallback(device);
@@ -298,7 +297,7 @@ void useCoordinates(trackHat_Device_t* device)
 
     while (1)//runApplication)
     {
-        Sleep(static_cast<time_t>(timeoutSec * 1000));
+        ::Sleep(static_cast<DWORD>(timeoutSec * 1000));
 
 #if USE_EXTENDED_COORDINATES
         trackHat_ExtendedPoints_t extendedPoints;
@@ -318,7 +317,7 @@ void useCoordinates(trackHat_Device_t* device)
         {
             printf("Get coordinates error: %d\n", result);
             errorDetected = true;
-            Sleep(static_cast<time_t>(timeoutSec * 1000));
+            ::Sleep(static_cast<DWORD>(timeoutSec * 1000));
         }
 #else
         trackHat_Points_t points;
@@ -338,7 +337,7 @@ void useCoordinates(trackHat_Device_t* device)
         {
             printf("Get coordinates error: %d\n", result);
             errorDetected = true;
-            Sleep(timeoutSec * 1000);
+            ::Sleep(static_cast<DWORD>(timeoutSec * 1000));
         }
 #endif
 
@@ -405,7 +404,7 @@ void printCoordinates(const trackHat_Points_t* const points)
             if (points->m_point[i].m_brightness > 0)
             {
                 printf("%d: X: %d    Y: %d\n", i,
-                       points->m_point[i].m_x, points->m_point[i].m_y);
+                points->m_point[i].m_x, points->m_point[i].m_y);
             }
         }
     }
@@ -422,8 +421,8 @@ void printCoordinates(const trackHat_ExtendedPoints_t* const points)
             if (points->m_point[i].m_averageBrightness > 0)
             {
                 printf("%d: X: %d    Y: %d Brightness: %d Area: %d\n", i,
-                       points->m_point[i].m_coordinateX, points->m_point[i].m_coordinateY,
-                       points->m_point[i].m_averageBrightness, points->m_point[i].m_area);
+                points->m_point[i].m_coordinateX, points->m_point[i].m_coordinateY,
+                points->m_point[i].m_averageBrightness, points->m_point[i].m_area);
             }
         }
         fflush(stdout);

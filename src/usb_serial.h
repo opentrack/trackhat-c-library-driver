@@ -17,7 +17,7 @@ typedef struct
 {
     uint16_t m_comNumber = 0;       // Number of COM port
     char     m_comFileName[20];     // Contain Windows friendly name
-    HANDLE   m_comHandler;          // Handle to the serial port
+    HANDLE   m_comHandler = 0;          // Handle to the serial port
     COMMTIMEOUTS m_timeouts;        // Initializing timeouts structure
     bool     m_isPortOpen = false;  // Port is open or close
 } usbSerial_t;

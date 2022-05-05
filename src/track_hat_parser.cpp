@@ -4,7 +4,6 @@
 //------------------------------------------------------
 
 #include "track_hat_parser.h"
-
 #include "crc.h"
 #include "logger.h"
 #include "track_hat_types_internal.h"
@@ -73,15 +72,16 @@ namespace Parser
         for(uint8_t i = 0; i < setRegisterGroup->numberOfRegisters; i++)
         {
             size_t indexOfCurrentRegister = 3 + (3*i);
-            message[indexOfCurrentRegister] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[0].m_registerBank);
-            message[indexOfCurrentRegister + 1] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[0].m_registerAddress);
-            message[indexOfCurrentRegister + 2] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[0].m_registerValue);
+            message[indexOfCurrentRegister] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[i].m_registerBank);
+            message[indexOfCurrentRegister + 1] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[i].m_registerAddress);
+            message[indexOfCurrentRegister + 2] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[i].m_registerValue);
         }
         size_t messageLength = 1 + 1 + 1 + 3*setRegisterGroup->numberOfRegisters;
         appednCRC(message, messageLength);
         return messageLength;
     }
-size_t createMessageSetLeds(uint8_t* message, trackHat_SetLeds_t* setLeds, uint8_t* messageTransactionID)
+
+    size_t createMessageSetLeds(uint8_t* message, trackHat_SetLeds_t* setLeds, uint8_t* messageTransactionID)
     {
         *messageTransactionID = transactionID;
         message[0] = MessageID::ID_SET_LEDS;
@@ -89,6 +89,19 @@ size_t createMessageSetLeds(uint8_t* message, trackHat_SetLeds_t* setLeds, uint8
         message[2] = static_cast<uint8_t>(setLeds->ledRedState);
         message[3] = static_cast<uint8_t>(setLeds->ledGreenState);
         message[4] = static_cast<uint8_t>(setLeds->ledBlueState);
+        size_t messageLength = 5;
+        appednCRC(message, messageLength);
+        return messageLength;
+    }
+
+    size_t createMessageEnableBootloader(uint8_t* message, uint16_t bufferSize, TH_BootloaderMode bootloaderMode, uint8_t* messageTransactionID)
+    {
+        if (bufferSize < 5)
+            return 0;
+        *messageTransactionID = transactionID;
+        message[0] = MessageID::ID_RESET_DEVICE;
+        message[1] = transactionID++;
+        message[2] = static_cast<uint8_t>(bootloaderMode);
         size_t messageLength = 5;
         appednCRC(message, messageLength);
         return messageLength;
@@ -127,32 +140,30 @@ size_t createMessageSetLeds(uint8_t* message, trackHat_SetLeds_t* setLeds, uint8
         SetEvent(deviceInfo.m_newMessageEvent);
     }
 
-    void parseMessageCoordinates(std::vector<uint8_t>& input, MessageCoordinates& coordinates)
+    void parseMessageCoordinates(const std::vector<uint8_t>& input, MessageCoordinates& coordinates)
     {
         trackHat_Point_t* points = coordinates.m_points.m_point;
         uint16_t value = 0;
         size_t byte = 1;
 
-        WaitForSingleObject(coordinates.m_mutex, INFINITE);
+        ::WaitForSingleObject(coordinates.m_mutex, INFINITE);
 
         for (size_t i = 0; i < TRACK_HAT_NUMBER_OF_POINTS; i++)
         {
-            value = input[byte++] << 8;
+            value = static_cast<uint16_t>(input[byte++] << 8);
             value = value | input[byte++];
             points[i].m_x = value;
 
-            value = input[byte++] << 8;
+            value = static_cast<uint16_t>(input[byte++] << 8);
             value = value | input[byte++];
             points[i].m_y = value;
 
             points[i].m_brightness = input[byte++];
         }
 
-        ReleaseMutex(coordinates.m_mutex);
-        //TODO: to remove
-        //LOG_INFO("SetEvent " << (int)points[0].m_brightness);
-        SetEvent(coordinates.m_newMessageEvent);
-        SetEvent(coordinates.m_newCallbackEvent);
+        ::ReleaseMutex(coordinates.m_mutex);
+        ::SetEvent(coordinates.m_newMessageEvent);
+        ::SetEvent(coordinates.m_newCallbackEvent);
     }
 
     void parseMessageExtendedCoordinates(std::vector<uint8_t>& input, MessageExtendedCoordinates& extendedCoordinates)
@@ -174,12 +185,12 @@ size_t createMessageSetLeds(uint8_t* message, trackHat_SetLeds_t* setLeds, uint8
         input.erase(input.begin(), input.begin()+MessageExtendedCoordinates::FrameSize);
     }
 
-    void parseMessageACK(std::vector<uint8_t>& input, trackHat_Messages_t& messages)
+    void parseMessageACK(const std::vector<uint8_t>& input, trackHat_Messages_t& messages)
     {
         messages.m_lastACKTransactionId = input[1];
     }
 
-    void parseMessageNACK(std::vector<uint8_t>& input, MessageNACK& nack)
+    void parseMessageNACK(const std::vector<uint8_t>& input, MessageNACK& nack)
     {
         nack.m_transactionID = input[1];
         nack.m_reason = static_cast<NACKReason>(input[2]);
@@ -353,27 +364,21 @@ size_t createMessageSetLeds(uint8_t* message, trackHat_SetLeds_t* setLeds, uint8
         message[index++] = crc & 0xff;
     }
 
-    bool checkCRC(std::vector<uint8_t>& buffer, size_t size)
+    bool checkCRC(const std::vector<uint8_t>& buffer, size_t size)
     {
         // Get CRC from the last two bytes
-        uint16_t crc1 = static_cast<uint16_t>(buffer[size - 2]) << 8 |
-                        static_cast<uint16_t>(buffer[size - 1]);
+        auto crc1 = static_cast<uint16_t>(
+            static_cast<unsigned>(buffer[size - 2]) << 8 | static_cast<unsigned>(buffer[size - 1]));
         // Calculate CRC without last two bytes
         uint16_t crc2 = calculateCCITTCRC16(buffer, size - 2);
         return crc1 == crc2;
     }
 
-    void parseRawExtendedPointToHumanRedable(trackHat_ExtendedPointRaw_t& rawPoint, trackHat_ExtendedPoint_t& extendedPointsParsed)
+    void parseRawExtendedPointToHumanRedable(const trackHat_ExtendedPointRaw_t& rawPoint, trackHat_ExtendedPoint_t& extendedPointsParsed)
     {
-        extendedPointsParsed.m_area = (rawPoint.m_areaHigh << 8) | rawPoint.m_areaLow;
-        extendedPointsParsed.m_coordinateX = rawPoint.m_coordinateXHigh;
-        extendedPointsParsed.m_coordinateX = (extendedPointsParsed.m_coordinateX << 8) | rawPoint.m_coordinateXLow;
-        extendedPointsParsed.m_coordinateX = extendedPointsParsed.m_coordinateX & 0x3fff;
-
-        extendedPointsParsed.m_coordinateY = rawPoint.m_coordinateYHigh;
-        extendedPointsParsed.m_coordinateY = (extendedPointsParsed.m_coordinateY << 8) | rawPoint.m_coordinateYLow;
-        extendedPointsParsed.m_coordinateY = extendedPointsParsed.m_coordinateY & 0x3fff;
-
+        extendedPointsParsed.m_area = static_cast<uint16_t>(static_cast<unsigned>(rawPoint.m_areaHigh << 8) | static_cast<unsigned>(rawPoint.m_areaLow));
+        extendedPointsParsed.m_coordinateX = static_cast<uint16_t>(static_cast<unsigned>(rawPoint.m_coordinateXHigh << 8) | static_cast<unsigned>(rawPoint.m_coordinateXLow)) & 0x3fff;
+        extendedPointsParsed.m_coordinateY = static_cast<uint16_t>(static_cast<unsigned>(rawPoint.m_coordinateYHigh << 8) | static_cast<unsigned>(rawPoint.m_coordinateYLow)) & 0x3fff;
         extendedPointsParsed.m_averageBrightness = rawPoint.m_averageBrightness;
         extendedPointsParsed.m_maximumBrightness = rawPoint.m_maximumBrightness;
         extendedPointsParsed.m_range = rawPoint.m_range;
@@ -390,7 +395,6 @@ size_t createMessageSetLeds(uint8_t* message, trackHat_SetLeds_t* setLeds, uint8
     void printExtendedPoint(trackHat_ExtendedPoint_t extendedPoint, int i)
     {
         std::cout << "Index = " << i << " X = " << extendedPoint.m_coordinateX << " Y = " << extendedPoint.m_coordinateY << std::endl;
-        std::cout.flush();
     }
 
 
