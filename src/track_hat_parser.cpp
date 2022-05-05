@@ -72,9 +72,9 @@ namespace Parser
         for(uint8_t i = 0; i < setRegisterGroup->numberOfRegisters; i++)
         {
             size_t indexOfCurrentRegister = 3 + (3*i);
-            message[indexOfCurrentRegister] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[0].m_registerBank);
-            message[indexOfCurrentRegister + 1] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[0].m_registerAddress);
-            message[indexOfCurrentRegister + 2] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[0].m_registerValue);
+            message[indexOfCurrentRegister] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[i].m_registerBank);
+            message[indexOfCurrentRegister + 1] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[i].m_registerAddress);
+            message[indexOfCurrentRegister + 2] = static_cast<uint8_t>(setRegisterGroup->setRegisterGroupValue[i].m_registerValue);
         }
         size_t messageLength = 1 + 1 + 1 + 3*setRegisterGroup->numberOfRegisters;
         appednCRC(message, messageLength);
@@ -166,22 +166,23 @@ namespace Parser
         ::SetEvent(coordinates.m_newCallbackEvent);
     }
 
-    void parseMessageExtendedCoordinates(const std::vector<uint8_t>& input, MessageExtendedCoordinates& extendedCoordinates)
+    void parseMessageExtendedCoordinates(std::vector<uint8_t>& input, MessageExtendedCoordinates& extendedCoordinates)
     {
         trackHat_ExtendedPointRaw_t rawPoints[TRACK_HAT_NUMBER_OF_POINTS];
 
         bool result = checkCRC(input, MessageExtendedCoordinates::FrameSize);
         if (result)
         {
-            ::memcpy(&rawPoints, input.data()+1, MessageExtendedCoordinates::FrameSize-3);
+            memcpy(&rawPoints, input.data()+1, MessageExtendedCoordinates::FrameSize-3);
             for (size_t i=0; i<TRACK_HAT_NUMBER_OF_POINTS; i++)
             {
                 parseRawExtendedPointToHumanRedable(rawPoints[i], extendedCoordinates.m_points.m_point[i]);
             }
-            ::ReleaseMutex(extendedCoordinates.m_mutex);
-            ::SetEvent(extendedCoordinates.m_newMessageEvent);
-            ::SetEvent(extendedCoordinates.m_newCallbackEvent);
+            ReleaseMutex(extendedCoordinates.m_mutex);
+            SetEvent(extendedCoordinates.m_newMessageEvent);
+            SetEvent(extendedCoordinates.m_newCallbackEvent);
         }
+        input.erase(input.begin(), input.begin()+MessageExtendedCoordinates::FrameSize);
     }
 
     void parseMessageACK(const std::vector<uint8_t>& input, trackHat_Messages_t& messages)
@@ -330,35 +331,24 @@ namespace Parser
                     break;
                 }
 
-                case MessageID::ID_EXTENDED_COORDINATES:
+            case MessageID::ID_EXTENDED_COORDINATES:
+            {
+
+                if (input.size() >= MessageExtendedCoordinates::FrameSize)
                 {
-
-                    if (input.size() >= MessageExtendedCoordinates::FrameSize)
-                    {
-                        if (checkCRC(input, MessageNACK::FrameSize))
-                        {
-                            //LOG_INFO("New Extended Coordinates message.");
-                            parseMessageExtendedCoordinates(input, messages.m_extendedCoordinates);
-                            input.erase(input.begin(), input.begin() + MessageExtendedCoordinates::FrameSize);
-                        }
-                        else
-                        {
-                            LOG_ERROR("New Extended Coordinates message - wrong CRC.");
-                            input.erase(input.begin());
-                        }
-                    }
-                    else
-                    {
-                        return;
-                    }
-                    break;
+                    parseMessageExtendedCoordinates(input, messages.m_extendedCoordinates);
                 }
-
+                else
+                {
+                    return;
+                }
+                break;
+            }
                 default:
                 {
-                    char bytes[8];
-                    sprintf_s(bytes, sizeof(bytes), "0x%02x", input[0]);
-                    LOG_ERROR("Unknown frame Id " << bytes << ".");
+                    char byte[8];
+                    sprintf(byte, "0x%02x", input[0]);
+                    LOG_ERROR("Unknown frame Id " << byte << ".");
                     input.erase(input.begin());
                     break;
                 }
