@@ -182,7 +182,7 @@ TH_ErrorCode trackHat_Connect(trackHat_Device_t* device, TH_FrameType frameType)
     ::Sleep(50);  // Give 50 ms time to flush the buffers.
 
     // Update device info
-#if 0
+#if 1
     result = trackHat_UpdateInfo(device);
     if (result != TH_SUCCESS)
     {
@@ -220,12 +220,14 @@ TH_ErrorCode trackHat_Disconnect(trackHat_Device_t* device)
     trackHat_Thread_t& receiverThread = pInternal->m_receiver;
     usbSerial_t& serial = pInternal->m_serial;
 
+#if 1
     if (serial.m_isPortOpen)
     {
         // TODO error handling check if error reported, continue
         // Enable Idle mode
         trackHat_EnableSendingCoordinates(device, false, TH_FRAME_BASIC);
     }
+#endif
 
     // Stop receiving thread
     receiverThread.m_isRunning = false;
@@ -420,17 +422,20 @@ TH_ErrorCode trackHat_EnableSendingCoordinates(trackHat_Device_t* device, bool e
         return result;
     }
 
-    result = trackHat_UpdateInternalStatus(device);
-    if (result != TH_SUCCESS)
+    if (enable)
     {
-        return result;
-    }
+        result = trackHat_UpdateInternalStatus(device);
+        if (result != TH_SUCCESS)
+        {
+            return result;
+        }
 
-    if ((enable && (device->m_isIdleMode == 1)) ||
-        (!enable && (device->m_isIdleMode == 0)))
-    {
-        LOG_ERROR("Setting the operation mode failed.");
-        return TH_ERROR_DEVICE_COMMUNICATION_FAILED;
+        if ((enable && (device->m_isIdleMode == 1)) ||
+            (!enable && (device->m_isIdleMode == 0)))
+        {
+            LOG_ERROR("Setting the operation mode failed.");
+            return TH_ERROR_DEVICE_COMMUNICATION_FAILED;
+        }
     }
 
     return TH_SUCCESS;
