@@ -13,7 +13,7 @@
 
 
 /* Structure for serial port suppoer */
-typedef struct
+typedef struct usbSerial_t
 {
     uint16_t m_comNumber = 0;       // Number of COM port
     char     m_comFileName[20];     // Contain Windows friendly name

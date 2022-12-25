@@ -24,7 +24,7 @@
 
 
 /* Structure for the last messages received from the TrackHat camera. */
-typedef struct
+typedef struct trackHat_Messages_t
 {
     MessageStatus              m_status;
     MessageDeviceInfo          m_deviceInfo;
